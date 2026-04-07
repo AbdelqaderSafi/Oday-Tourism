@@ -18,12 +18,12 @@ import { QuestionModule } from './modules/question/question.module';
 
 @Module({
   imports: [
-    DatabaseModule,
-    AuthModule,
-    AdminModule,
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    DatabaseModule,
+    AuthModule,
+    AdminModule,
     ThrottlerModule.forRoot({
       throttlers: [
         { name: 'short', ttl: 1000, limit: 5 },

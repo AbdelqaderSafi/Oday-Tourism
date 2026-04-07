@@ -16,19 +16,35 @@ export class AdminService implements OnApplicationBootstrap {
     const password = process.env.ADMIN_PASSWORD;
 
     if (!email || !password) {
-      this.logger.warn('ADMIN_EMAIL or ADMIN_PASSWORD not set — skipping admin seed');
-      return;
+      throw new Error(
+        'ADMIN_EMAIL and ADMIN_PASSWORD environment variables must be set. ' +
+          'Refusing to start without them to prevent insecure defaults.',
+      );
     }
 
     const existing = await this.prismaService.admin.findUnique({ where: { email } });
-    if (existing) return;
 
-    const hashedPassword = await argon.hash(password);
-    await this.prismaService.admin.create({
-      data: { email, password: hashedPassword, name: 'Admin User' },
-    });
+    if (!existing) {
+      const hashedPassword = await argon.hash(password);
+      await this.prismaService.admin.create({
+        data: { email, password: hashedPassword, name: 'Admin User' },
+      });
+      this.logger.log(`Admin account created: ${email}`);
+      return;
+    }
 
-    this.logger.log(`Admin account created: ${email}`);
+    // Always verify the stored hash against the current env password so that
+    // rotating ADMIN_PASSWORD in the environment takes effect on next restart
+    // instead of silently continuing to accept the old credential.
+    const passwordInSync = await argon.verify(existing.password, password);
+    if (!passwordInSync) {
+      const hashedPassword = await argon.hash(password);
+      await this.prismaService.admin.update({
+        where: { email },
+        data: { password: hashedPassword },
+      });
+      this.logger.log('Admin password synced to match current environment configuration.');
+    }
   }
 
   findByEmail(email: string) {

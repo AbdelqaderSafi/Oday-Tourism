@@ -8,6 +8,8 @@ export type EnvVariables = {
   OTP_SECRET: string;
   IMAGEKIT_SECRET_KEY: string;
   JWT_SECRET: string;
+  ADMIN_EMAIL: string;
+  ADMIN_PASSWORD: string;
 };
 
 declare global {
