@@ -15,6 +15,8 @@ import { SecurityApprovalModule } from './modules/security-approval/security-app
 import { PhotoGalleryModule } from './modules/photo-gallery/photo-gallery.module';
 import { CommentModule } from './modules/comment/comment.module';
 import { QuestionModule } from './modules/question/question.module';
+import { TripAddonModule } from './modules/trip-addon/trip-addon.module';
+import { TripOptionModule } from './modules/trip-option/trip-option.module';
 
 @Module({
   imports: [
@@ -40,6 +42,8 @@ import { QuestionModule } from './modules/question/question.module';
     PhotoGalleryModule,
     CommentModule,
     QuestionModule,
+    TripAddonModule,
+    TripOptionModule,
   ],
   controllers: [],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
