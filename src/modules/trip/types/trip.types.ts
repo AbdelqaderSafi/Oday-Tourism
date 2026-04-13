@@ -1,5 +1,6 @@
+import { DestinatiosnEnum } from 'generated/prisma/client';
 import { PaginationQueryType } from 'src/types/util.types';
 
 export type TripQuery = PaginationQueryType & {
-  // يمكن إضافة فلاتر إضافية هنا لاحقاً
+  city?: DestinatiosnEnum;
 };

@@ -1,4 +1,4 @@
-import { LanguageEnum, Prisma } from 'generated/prisma/client';
+import { DestinatiosnEnum, LanguageEnum, Prisma } from 'generated/prisma/client';
 
 export type TripTranslationInput = {
   language: LanguageEnum;
@@ -21,6 +21,7 @@ export type TripAddonInput = {
 
 export type CreateTripDto = {
   slug: string;
+  city: DestinatiosnEnum;
   price: Prisma.Decimal;
   start_time: string;
   end_time: string;

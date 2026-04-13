@@ -65,8 +65,16 @@ const addonsField = z
   .pipe(z.array(tripAddonInputSchema))
   .optional();
 
+const cityEnum = z.enum([
+  'SHARM_EL_SHEIKH',
+  'EL_GHARDQA',
+  'EL_AIN_SOKHNA',
+  'DAHAB',
+]);
+
 export const tripValidationSchema = z.object({
   slug: z.string().min(2).max(255),
+  city: cityEnum,
   price: z.coerce
     .number()
     .min(0)
@@ -91,6 +99,7 @@ const uuidLike = z
 
 export const updateTripValidationSchema = z.object({
   slug: z.string().min(2).max(255).optional(),
+  city: cityEnum.optional(),
   price: z.coerce
     .number()
     .min(0)
@@ -108,5 +117,12 @@ export const updateTripValidationSchema = z.object({
 });
 
 export const tripPaginationSchema = paginationSchema.extend({
-  // يمكن إضافة فلاتر إضافية هنا لاحقاً
+  city: z
+    .enum([
+      'SHARM_EL_SHEIKH',
+      'EL_GHARDQA',
+      'EL_AIN_SOKHNA',
+      'DAHAB',
+    ])
+    .optional(),
 }) satisfies z.ZodType<TripQuery>;

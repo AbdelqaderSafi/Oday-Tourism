@@ -21,6 +21,7 @@ export const CreateTripSwagger = () =>
         type: 'object',
         required: [
           'slug',
+          'city',
           'price',
           'start_time',
           'end_time',
@@ -32,6 +33,12 @@ export const CreateTripSwagger = () =>
             type: 'string',
             example: 'cairo-historical-trip',
             description: 'الـ slug الفريد للرحلة',
+          },
+          city: {
+            type: 'string',
+            enum: ['SHARM_EL_SHEIKH', 'EL_GHARDQA', 'EL_AIN_SOKHNA', 'DAHAB'],
+            example: 'SHARM_EL_SHEIKH',
+            description: 'المدينة التي تنطلق منها الرحلة',
           },
           price: { type: 'number', example: 350, minimum: 0 },
           start_time: {
@@ -92,7 +99,7 @@ export const FindAllTripsSwagger = () =>
   applyDecorators(
     ApiOperation({
       summary: 'جلب جميع الرحلات',
-      description: 'جلب الرحلات مع الترجمات والصور، مع دعم الـ pagination',
+      description: 'جلب الرحلات مع الترجمات والصور، مع دعم الـ pagination والفلترة بالمدينة',
     }),
     ApiQuery({
       name: 'page',
@@ -107,6 +114,12 @@ export const FindAllTripsSwagger = () =>
       type: Number,
       example: 10,
       description: 'عدد العناصر في الصفحة',
+    }),
+    ApiQuery({
+      name: 'city',
+      required: false,
+      enum: ['SHARM_EL_SHEIKH', 'EL_GHARDQA', 'EL_AIN_SOKHNA', 'DAHAB'],
+      description: 'فلترة الرحلات حسب المدينة',
     }),
     ApiResponse({
       status: 200,
@@ -243,6 +256,12 @@ export const UpdateTripSwagger = () =>
             type: 'string',
             example: 'cairo-historical-trip-updated',
             description: 'الـ slug الفريد للرحلة (اختياري)',
+          },
+          city: {
+            type: 'string',
+            enum: ['SHARM_EL_SHEIKH', 'EL_GHARDQA', 'EL_AIN_SOKHNA', 'DAHAB'],
+            example: 'EL_GHARDQA',
+            description: 'المدينة التي تنطلق منها الرحلة (اختياري)',
           },
           price: { type: 'number', example: 400, minimum: 0 },
           start_time: { type: 'string', example: '9:00 AM' },

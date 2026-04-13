@@ -220,6 +220,7 @@ model settings {
 model trips {
   id                 String            @id @default(uuid()) @db.VarChar(36)
   slug               String            @unique @db.VarChar(255)
+  city               DestinatiosnEnum
   price              Decimal           @db.Decimal(10, 2)
   start_time         String            @db.VarChar(255)
   end_time           String            @db.VarChar(255)

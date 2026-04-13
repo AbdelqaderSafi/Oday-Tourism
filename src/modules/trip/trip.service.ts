@@ -26,9 +26,7 @@ export class TripService {
     },
   ) {
     if (!files?.mainImages || files.mainImages.length === 0) {
-      throw new BadRequestException(
-        'يجب إرفاق صورة رئيسية واحدة للرحلة',
-      );
+      throw new BadRequestException('يجب إرفاق صورة رئيسية واحدة للرحلة');
     }
 
     const tripId = randomUUID();
@@ -135,6 +133,7 @@ export class TripService {
     return this.prismaService.$transaction(async (prisma) => {
       const whereClause: Prisma.tripsWhereInput = {
         is_deleted: false,
+        ...(query.city && { city: query.city }),
       };
 
       const pagination = this.prismaService.handleQueryPagination(query);
