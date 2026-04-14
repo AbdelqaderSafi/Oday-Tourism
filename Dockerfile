@@ -51,4 +51,4 @@ ENV NODE_ENV=production
 
 EXPOSE 3000
 
-CMD npx prisma migrate deploy && node dist/src/main
+CMD npx prisma migrate resolve --rolled-back 20260414000000_add_meal_plan_to_hotels 2>/dev/null || true && npx prisma migrate deploy && node dist/src/main
