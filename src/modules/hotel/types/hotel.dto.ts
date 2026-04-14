@@ -1,6 +1,7 @@
 import {
   DestinatiosnEnum,
   HotelFilterRating,
+  HotelMealPlan,
   hotels_stars,
   LanguageEnum,
   Prisma,
@@ -29,6 +30,7 @@ export type CreateHotelDto = {
   initial_price: Prisma.Decimal;
   stars: hotels_stars;
   rating: HotelFilterRating;
+  meal_plan?: HotelMealPlan;
   is_discounted?: boolean;
   discount_percentage?: Prisma.Decimal;
   original_price?: Prisma.Decimal;

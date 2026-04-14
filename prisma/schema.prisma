@@ -73,19 +73,20 @@ model gallery {
 }
 
 model hotels {
-  id                  String             @id @default(uuid()) @db.VarChar(36)
-  slug                String             @unique @db.VarChar(255)
+  id                  String              @id @default(uuid()) @db.VarChar(36)
+  slug                String              @unique @db.VarChar(255)
   destination         DestinatiosnEnum
-  initial_price       Decimal            @db.Decimal(10, 2)
+  initial_price       Decimal             @db.Decimal(10, 2)
   stars               hotels_stars
   rating              HotelFilterRating
-  is_discounted       Boolean            @default(false)
-  discount_percentage Decimal?           @db.Decimal(5, 2)
-  original_price      Decimal?           @db.Decimal(10, 2)
-  youtube_video_url   String?            @db.Text
-  is_deleted          Boolean            @default(false)
-  created_at          DateTime           @default(now())
-  updated_at          DateTime           @updatedAt
+  meal_plan           HotelMealPlan?
+  is_discounted       Boolean             @default(false)
+  discount_percentage Decimal?            @db.Decimal(5, 2)
+  original_price      Decimal?            @db.Decimal(10, 2)
+  youtube_video_url   String?             @db.Text
+  is_deleted          Boolean             @default(false)
+  created_at          DateTime            @default(now())
+  updated_at          DateTime            @updatedAt
   translations        HotelTranslation[]
   rooms               Room[]
   addons              HotelAddon[]
@@ -448,6 +449,11 @@ enum Nationality {
   DOMINICA
 }
 
+enum HotelMealPlan {
+  BREAKFAST_INCLUDED
+  ALL_INCLUSIVE
+}
+
 enum Airline {
   QATAR_AIRWAYS
   EMIRATES
@@ -456,3 +462,4 @@ enum Airline {
   OMAN_AIR
   OTHER
 }
+

@@ -50,6 +50,12 @@ export const CreateHotelSwagger = () =>
             enum: ['UNRATED', 'MOST_BOOKED', 'TOP_RATED', 'LOWEST_PRICE'],
             example: 'UNRATED',
           },
+          meal_plan: {
+            type: 'string',
+            enum: ['BREAKFAST_INCLUDED', 'ALL_INCLUSIVE'],
+            example: 'BREAKFAST_INCLUDED',
+            description: 'نوع الوجبات المشمولة (اختياري)',
+          },
           is_discounted: {
             type: 'boolean',
             example: false,
@@ -294,6 +300,11 @@ export const UpdateHotelSwagger = () =>
           rating: {
             type: 'string',
             enum: ['UNRATED', 'MOST_BOOKED', 'TOP_RATED', 'LOWEST_PRICE'],
+          },
+          meal_plan: {
+            type: 'string',
+            enum: ['BREAKFAST_INCLUDED', 'ALL_INCLUSIVE'],
+            description: 'نوع الوجبات المشمولة (اختياري)',
           },
           is_discounted: { type: 'boolean' },
           discount_percentage: { type: 'number', minimum: 0, maximum: 100 },
