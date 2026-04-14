@@ -77,7 +77,7 @@ export const hotelValidationSchema = z.object({
     .transform((val) => new Prisma.Decimal(val)),
   stars: z.enum(['ONE', 'TWO', 'THREE', 'FOUR', 'FIVE']),
   rating: z.enum(['UNRATED', 'MOST_BOOKED', 'TOP_RATED', 'LOWEST_PRICE']),
-  meal_plan: z.enum(['BREAKFAST_INCLUDED', 'ALL_INCLUSIVE']).optional(),
+  meal_plan: z.enum(['ALL_INCLUSIVE', 'BREAKFAST_ONLY', 'BREAKFAST_AND_DINNER', 'NO_MEALS']).optional(),
   is_discounted: z
     .union([z.boolean(), z.string().transform((val) => val === 'true')])
     .default(false),
@@ -135,7 +135,7 @@ export const updateHotelValidationSchema = z.object({
     .optional(),
   meal_plan: z
     .union([
-      z.enum(['BREAKFAST_INCLUDED', 'ALL_INCLUSIVE']),
+      z.enum(['ALL_INCLUSIVE', 'BREAKFAST_ONLY', 'BREAKFAST_AND_DINNER', 'NO_MEALS']),
       z.literal('').transform(() => undefined),
     ])
     .optional(),

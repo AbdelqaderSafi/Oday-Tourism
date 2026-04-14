@@ -52,8 +52,8 @@ export const CreateHotelSwagger = () =>
           },
           meal_plan: {
             type: 'string',
-            enum: ['BREAKFAST_INCLUDED', 'ALL_INCLUSIVE'],
-            example: 'BREAKFAST_INCLUDED',
+            enum: ['ALL_INCLUSIVE', 'BREAKFAST_ONLY', 'BREAKFAST_AND_DINNER', 'NO_MEALS'],
+            example: 'BREAKFAST_ONLY',
             description: 'نوع الوجبات المشمولة (اختياري)',
           },
           is_discounted: {
@@ -303,7 +303,7 @@ export const UpdateHotelSwagger = () =>
           },
           meal_plan: {
             type: 'string',
-            enum: ['BREAKFAST_INCLUDED', 'ALL_INCLUSIVE'],
+            enum: ['ALL_INCLUSIVE', 'BREAKFAST_ONLY', 'BREAKFAST_AND_DINNER', 'NO_MEALS'],
             description: 'نوع الوجبات المشمولة (اختياري)',
           },
           is_discounted: { type: 'boolean' },

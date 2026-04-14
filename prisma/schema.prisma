@@ -450,8 +450,10 @@ enum Nationality {
 }
 
 enum HotelMealPlan {
-  BREAKFAST_INCLUDED
   ALL_INCLUSIVE
+  BREAKFAST_ONLY
+  BREAKFAST_AND_DINNER
+  NO_MEALS
 }
 
 enum Airline {
