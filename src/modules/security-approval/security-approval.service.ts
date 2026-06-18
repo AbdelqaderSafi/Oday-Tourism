@@ -109,11 +109,23 @@ export class SecurityApprovalService {
   }
 
   async createAirlinePricing(dto: CreateAirlinePricingDto) {
-    const existing = await this.prisma.airlinePricing.findFirst({
-      where: { airline: dto.airline, is_deleted: false },
+    // الحقل `airline` فريد (unique) على مستوى قاعدة البيانات ولا يميّز السجلات
+    // المحذوفة منطقياً، لذلك نبحث عن أي سجل سابق بصرف النظر عن is_deleted.
+    const existing = await this.prisma.airlinePricing.findUnique({
+      where: { airline: dto.airline },
     });
-    if (existing) {
+    if (existing && !existing.is_deleted) {
       throw new ConflictException('تسعيرة شركة الطيران هذه موجودة مسبقاً');
+    }
+    // إذا كان هناك سجل محذوف سابقاً نعيد تفعيله بدل إنشاء سجل جديد
+    if (existing) {
+      return this.prisma.airlinePricing.update({
+        where: { airline: dto.airline },
+        data: {
+          price: dto.price as Prisma.Decimal,
+          is_deleted: false,
+        },
+      });
     }
 
     return this.prisma.airlinePricing.create({
@@ -177,11 +189,24 @@ export class SecurityApprovalService {
   }
 
   async createNationalityPricing(dto: CreateNationalityPricingDto) {
-    const existing = await this.prisma.nationalityPricing.findFirst({
-      where: { nationality: dto.nationality, is_deleted: false },
+    // الحقل `nationality` فريد (unique) ولا يميّز السجلات المحذوفة منطقياً،
+    // لذلك نبحث عن أي سجل سابق بصرف النظر عن is_deleted.
+    const existing = await this.prisma.nationalityPricing.findUnique({
+      where: { nationality: dto.nationality },
     });
-    if (existing) {
+    if (existing && !existing.is_deleted) {
       throw new ConflictException('تسعيرة هذه الجنسية موجودة مسبقاً');
+    }
+    // إذا كان هناك سجل محذوف سابقاً نعيد تفعيله بدل إنشاء سجل جديد
+    if (existing) {
+      return this.prisma.nationalityPricing.update({
+        where: { nationality: dto.nationality },
+        data: {
+          price_24h: dto.price_24h as Prisma.Decimal,
+          price_72h: dto.price_72h as Prisma.Decimal,
+          is_deleted: false,
+        },
+      });
     }
 
     return this.prisma.nationalityPricing.create({
