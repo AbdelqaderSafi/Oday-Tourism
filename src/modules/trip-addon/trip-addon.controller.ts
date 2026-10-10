@@ -8,6 +8,7 @@ import {
   Patch,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import { IsPublic } from 'src/decorators/public.decorator';
 import { TripAddonService } from './trip-addon.service';
 import type { CreateTripAddonDto, UpdateTripAddonDto } from './types/trip-addon.dto';
 import { ZodValidationPipe } from 'src/pipes/zod.validation.pipe';
@@ -39,12 +40,14 @@ export class TripAddonController {
     return this.tripAddonService.create(tripId, dto);
   }
 
+  @IsPublic(true)
   @Get()
   @FindAllTripAddonsSwagger()
   findAll(@Param('tripId') tripId: string) {
     return this.tripAddonService.findAll(tripId);
   }
 
+  @IsPublic(true)
   @Get(':id')
   @FindOneTripAddonSwagger()
   findOne(@Param('tripId') tripId: string, @Param('id') id: string) {

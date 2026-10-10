@@ -9,6 +9,7 @@ import {
   Query,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import { IsPublic } from 'src/decorators/public.decorator';
 import { QuestionService } from './question.service';
 import type { CreateQuestionDto, UpdateQuestionDto } from './types/question.dto';
 import { ZodValidationPipe } from 'src/pipes/zod.validation.pipe';
@@ -40,6 +41,7 @@ export class QuestionController {
     return this.questionService.create(dto);
   }
 
+  @IsPublic(true)
   @Get()
   @FindAllQuestionsSwagger()
   findAll(
@@ -49,6 +51,7 @@ export class QuestionController {
     return this.questionService.findAll(query);
   }
 
+  @IsPublic(true)
   @Get(':id')
   @FindOneQuestionSwagger()
   findOne(@Param('id') id: string) {

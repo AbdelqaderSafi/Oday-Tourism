@@ -11,6 +11,7 @@ import {
   Patch,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import { IsPublic } from 'src/decorators/public.decorator';
 import { HotelService } from './hotel.service';
 import type {
   CreateHotelDto,
@@ -61,6 +62,7 @@ export class HotelController {
     return this.hotelService.create(createHotelDto, files);
   }
 
+  @IsPublic(true)
   @Get()
   @FindAllHotelsSwagger()
   findAll(
@@ -69,6 +71,7 @@ export class HotelController {
     return this.hotelService.findAll(query);
   }
 
+  @IsPublic(true)
   @Get(':id')
   @FindOneHotelSwagger()
   findOne(@Param('id') id: string) {

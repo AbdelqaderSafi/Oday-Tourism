@@ -8,6 +8,7 @@ import {
   UploadedFiles,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import { IsPublic } from 'src/decorators/public.decorator';
 import { OfferService } from './offer.service';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { FileCleanupInterceptor } from '../file/cleanup-file.interceptor';
@@ -34,12 +35,14 @@ export class OfferController {
     return this.offerService.create(files);
   }
 
+  @IsPublic(true)
   @Get()
   @FindAllOffersSwagger()
   findAll() {
     return this.offerService.findAll();
   }
 
+  @IsPublic(true)
   @Get(':id')
   @FindOneOfferSwagger()
   findOne(@Param('id') id: string) {

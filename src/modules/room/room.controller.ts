@@ -8,6 +8,7 @@ import {
   Patch,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import { IsPublic } from 'src/decorators/public.decorator';
 import { RoomService } from './room.service';
 import type { CreateRoomDto, UpdateRoomDto } from './types/room.dto';
 import { ZodValidationPipe } from 'src/pipes/zod.validation.pipe';
@@ -38,12 +39,14 @@ export class RoomController {
     return this.roomService.create(hotelId, dto);
   }
 
+  @IsPublic(true)
   @Get()
   @FindAllRoomsSwagger()
   findAll(@Param('hotelId') hotelId: string) {
     return this.roomService.findAll(hotelId);
   }
 
+  @IsPublic(true)
   @Get(':id')
   @FindOneRoomSwagger()
   findOne(@Param('hotelId') hotelId: string, @Param('id') id: string) {

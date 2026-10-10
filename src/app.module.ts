@@ -17,6 +17,7 @@ import { CommentModule } from './modules/comment/comment.module';
 import { QuestionModule } from './modules/question/question.module';
 import { TripAddonModule } from './modules/trip-addon/trip-addon.module';
 import { TripOptionModule } from './modules/trip-option/trip-option.module';
+import { AuthGuard } from './modules/auth/guards/auth.guard';
 
 @Module({
   imports: [
@@ -46,6 +47,9 @@ import { TripOptionModule } from './modules/trip-option/trip-option.module';
     TripOptionModule,
   ],
   controllers: [],
-  providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
+  providers: [
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
+    { provide: APP_GUARD, useClass: AuthGuard },
+  ],
 })
 export class AppModule {}

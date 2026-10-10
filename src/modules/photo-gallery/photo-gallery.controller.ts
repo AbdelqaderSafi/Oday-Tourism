@@ -8,6 +8,7 @@ import {
   UploadedFiles,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import { IsPublic } from 'src/decorators/public.decorator';
 import { PhotoGalleryService } from './photo-gallery.service';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { FileCleanupInterceptor } from '../file/cleanup-file.interceptor';
@@ -34,12 +35,14 @@ export class PhotoGalleryController {
     return this.photoGalleryService.create(files);
   }
 
+  @IsPublic(true)
   @Get()
   @FindAllPhotoGalleriesSwagger()
   findAll() {
     return this.photoGalleryService.findAll();
   }
 
+  @IsPublic(true)
   @Get(':id')
   @FindOnePhotoGallerySwagger()
   findOne(@Param('id') id: string) {

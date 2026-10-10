@@ -8,6 +8,7 @@ import {
   Patch,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import { IsPublic } from 'src/decorators/public.decorator';
 import { AddonService } from './addon.service';
 import type { CreateAddonDto, UpdateAddonDto } from './types/addon.dto';
 import { ZodValidationPipe } from 'src/pipes/zod.validation.pipe';
@@ -39,12 +40,14 @@ export class AddonController {
     return this.addonService.create(hotelId, dto);
   }
 
+  @IsPublic(true)
   @Get()
   @FindAllAddonsSwagger()
   findAll(@Param('hotelId') hotelId: string) {
     return this.addonService.findAll(hotelId);
   }
 
+  @IsPublic(true)
   @Get(':id')
   @FindOneAddonSwagger()
   findOne(@Param('hotelId') hotelId: string, @Param('id') id: string) {

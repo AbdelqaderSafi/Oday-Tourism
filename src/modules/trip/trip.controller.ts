@@ -11,6 +11,7 @@ import {
   Patch,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import { IsPublic } from 'src/decorators/public.decorator';
 import { TripService } from './trip.service';
 import type {
   CreateTripDto,
@@ -61,6 +62,7 @@ export class TripController {
     return this.tripService.create(createTripDto, files);
   }
 
+  @IsPublic(true)
   @Get()
   @FindAllTripsSwagger()
   findAll(
@@ -69,6 +71,7 @@ export class TripController {
     return this.tripService.findAll(query);
   }
 
+  @IsPublic(true)
   @Get(':id')
   @FindOneTripSwagger()
   findOne(@Param('id') id: string) {

@@ -9,6 +9,7 @@ import {
   Query,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import { IsPublic } from 'src/decorators/public.decorator';
 import { CommentService } from './comment.service';
 import type { CreateCommentDto, UpdateCommentDto } from './types/comment.dto';
 import { ZodValidationPipe } from 'src/pipes/zod.validation.pipe';
@@ -40,6 +41,7 @@ export class CommentController {
     return this.commentService.create(dto);
   }
 
+  @IsPublic(true)
   @Get()
   @FindAllCommentsSwagger()
   findAll(
@@ -49,6 +51,7 @@ export class CommentController {
     return this.commentService.findAll(query);
   }
 
+  @IsPublic(true)
   @Get(':id')
   @FindOneCommentSwagger()
   findOne(@Param('id') id: string) {

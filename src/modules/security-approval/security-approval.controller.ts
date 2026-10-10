@@ -8,6 +8,7 @@ import {
   Patch,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import { IsPublic } from 'src/decorators/public.decorator';
 import { Airline, Nationality } from 'generated/prisma/client';
 import { SecurityApprovalService } from './security-approval.service';
 import { ZodValidationPipe } from 'src/pipes/zod.validation.pipe';
@@ -66,12 +67,14 @@ export class SecurityApprovalController {
     return this.service.createServiceType(dto);
   }
 
+  @IsPublic(true)
   @Get('service-type')
   @FindAllSecurityServiceTypesSwagger()
   findAllServiceTypes() {
     return this.service.findAllServiceTypes();
   }
 
+  @IsPublic(true)
   @Get('service-type/:id')
   @FindOneSecurityServiceTypeSwagger()
   findOneServiceType(@Param('id') id: string) {
@@ -96,6 +99,7 @@ export class SecurityApprovalController {
 
   // ─── Airline Pricing ─────────────────────────────────────────────────────
 
+  @IsPublic(true)
   @Get('airlines')
   @GetAllAirlinesSwagger()
   getAllAirlines() {
@@ -111,18 +115,21 @@ export class SecurityApprovalController {
     return this.service.createAirlinePricing(dto);
   }
 
+  @IsPublic(true)
   @Get('airline-pricing')
   @FindAllAirlinePricingSwagger()
   findAllAirlinePricing() {
     return this.service.findAllAirlinePricing();
   }
 
+  @IsPublic(true)
   @Get('airline-pricing/by-airline/:airline')
   @FindAirlinePricingByAirlineSwagger()
   findAirlinePricingByAirline(@Param('airline') airline: Airline) {
     return this.service.findAirlinePricingByAirline(airline);
   }
 
+  @IsPublic(true)
   @Get('airline-pricing/:id')
   @FindOneAirlinePricingSwagger()
   findOneAirlinePricing(@Param('id') id: string) {
@@ -147,6 +154,7 @@ export class SecurityApprovalController {
 
   // ─── Nationality Pricing ──────────────────────────────────────────────────
 
+  @IsPublic(true)
   @Get('nationalities')
   @GetAllNationalitiesSwagger()
   getAllNationalities() {
@@ -162,12 +170,14 @@ export class SecurityApprovalController {
     return this.service.createNationalityPricing(dto);
   }
 
+  @IsPublic(true)
   @Get('nationality-pricing')
   @FindAllNationalityPricingSwagger()
   findAllNationalityPricing() {
     return this.service.findAllNationalityPricing();
   }
 
+  @IsPublic(true)
   @Get('nationality-pricing/by-nationality/:nationality')
   @FindNationalityPricingByNationalitySwagger()
   findNationalityPricingByNationality(
@@ -176,6 +186,7 @@ export class SecurityApprovalController {
     return this.service.findNationalityPricingByNationality(nationality);
   }
 
+  @IsPublic(true)
   @Get('nationality-pricing/:id')
   @FindOneNationalityPricingSwagger()
   findOneNationalityPricing(@Param('id') id: string) {
