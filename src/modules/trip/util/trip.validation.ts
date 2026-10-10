@@ -70,6 +70,14 @@ const cityEnum = z.enum([
   'EL_GHARDQA',
   'EL_AIN_SOKHNA',
   'DAHAB',
+  'EL_GOUNA',
+  'NORTH_COAST',
+  'CAIRO',
+  'ALEXANDRIA',
+  'SAHL_HASHEESH',
+  'MARSA_MATROUH',
+  'MARSA_ALAM',
+  'FAYOUM',
 ]);
 
 export const tripValidationSchema = z.object({
@@ -123,6 +131,14 @@ export const tripPaginationSchema = paginationSchema.extend({
       'EL_GHARDQA',
       'EL_AIN_SOKHNA',
       'DAHAB',
+      'EL_GOUNA',
+      'NORTH_COAST',
+      'CAIRO',
+      'ALEXANDRIA',
+      'SAHL_HASHEESH',
+      'MARSA_MATROUH',
+      'MARSA_ALAM',
+      'FAYOUM',
     ])
     .optional(),
 }) satisfies z.ZodType<TripQuery>;

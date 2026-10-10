@@ -383,6 +383,14 @@ enum DestinatiosnEnum {
   EL_GHARDQA
   EL_AIN_SOKHNA
   DAHAB
+  EL_GOUNA
+  NORTH_COAST
+  CAIRO
+  ALEXANDRIA
+  SAHL_HASHEESH
+  MARSA_MATROUH
+  MARSA_ALAM
+  FAYOUM
 }
 
 enum ServiceTypeEnum {

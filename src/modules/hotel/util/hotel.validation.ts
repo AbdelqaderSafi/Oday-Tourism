@@ -70,6 +70,14 @@ export const hotelValidationSchema = z.object({
     'EL_GHARDQA',
     'EL_AIN_SOKHNA',
     'DAHAB',
+    'EL_GOUNA',
+    'NORTH_COAST',
+    'CAIRO',
+    'ALEXANDRIA',
+    'SAHL_HASHEESH',
+    'MARSA_MATROUH',
+    'MARSA_ALAM',
+    'FAYOUM',
   ]),
   initial_price: z.coerce
     .number()
@@ -112,7 +120,20 @@ export const updateHotelValidationSchema = z.object({
   slug: z.string().min(2).max(255).optional(),
   destination: z
     .union([
-      z.enum(['SHARM_EL_SHEIKH', 'EL_GHARDQA', 'EL_AIN_SOKHNA', 'DAHAB']),
+      z.enum([
+        'SHARM_EL_SHEIKH',
+        'EL_GHARDQA',
+        'EL_AIN_SOKHNA',
+        'DAHAB',
+        'EL_GOUNA',
+        'NORTH_COAST',
+        'CAIRO',
+        'ALEXANDRIA',
+        'SAHL_HASHEESH',
+        'MARSA_MATROUH',
+        'MARSA_ALAM',
+        'FAYOUM',
+      ]),
       z.literal('').transform(() => undefined),
     ])
     .optional(),
@@ -164,7 +185,20 @@ export const updateHotelValidationSchema = z.object({
 
 export const hotelPaginationSchema = paginationSchema.extend({
   destination: z
-    .enum(['SHARM_EL_SHEIKH', 'EL_GHARDQA', 'EL_AIN_SOKHNA', 'DAHAB'])
+    .enum([
+      'SHARM_EL_SHEIKH',
+      'EL_GHARDQA',
+      'EL_AIN_SOKHNA',
+      'DAHAB',
+      'EL_GOUNA',
+      'NORTH_COAST',
+      'CAIRO',
+      'ALEXANDRIA',
+      'SAHL_HASHEESH',
+      'MARSA_MATROUH',
+      'MARSA_ALAM',
+      'FAYOUM',
+    ])
     .optional(),
   rating: z
     .enum(['UNRATED', 'MOST_BOOKED', 'TOP_RATED', 'LOWEST_PRICE'])
