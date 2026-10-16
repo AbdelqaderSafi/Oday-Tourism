@@ -202,6 +202,16 @@ model PhotoGallery {
   @@map("photo_gallery")
 }
 
+model DestinationImage {
+  id          String           @id @default(uuid()) @db.VarChar(36)
+  destination DestinatiosnEnum @unique
+  created_at  DateTime         @default(now())
+  updated_at  DateTime         @updatedAt
+  assets      Asset[]
+
+  @@map("destination_images")
+}
+
 model settings {
   id              String  @id @default(uuid())
   company_name_ar String? @db.Text
@@ -335,6 +345,7 @@ model Asset {
   offerId             String?             @map("offer_id") @db.VarChar(36)
   galleryId           String?             @map("gallery_id") @db.VarChar(36)
   photoGalleryId      String?             @map("photo_gallery_id") @db.VarChar(36)
+  destinationImageId  String?             @map("destination_image_id") @db.VarChar(36)
   createdAt           DateTime            @default(now()) @map("created_at")
   updatedAt           DateTime            @updatedAt @map("updated_at")
   hotel               hotels?             @relation(fields: [hotelId], references: [id])
@@ -342,12 +353,14 @@ model Asset {
   offer               offers?             @relation(fields: [offerId], references: [id])
   gallery             gallery?            @relation(fields: [galleryId], references: [id])
   photoGallery        PhotoGallery?       @relation(fields: [photoGalleryId], references: [id])
+  destinationImage    DestinationImage?   @relation(fields: [destinationImageId], references: [id])
 
   @@index([tripId])
   @@index([hotelId])
   @@index([galleryId])
   @@index([offerId])
   @@index([photoGalleryId])
+  @@index([destinationImageId])
   @@map("assets")
 }
 
@@ -433,6 +446,7 @@ enum AssetKind {
   OFFER_IMAGE
   GALLERY_IMAGE
   PHOTO_GALLERY_IMAGE
+  DESTINATION_IMAGE
 }
 
 enum Nationality {

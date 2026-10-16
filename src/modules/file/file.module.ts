@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { BadRequestException, Module } from '@nestjs/common';
 import { FileService } from './file.service';
 import { MulterModule } from '@nestjs/platform-express';
 import { ImageKitProvider } from './imagekit.provider';
@@ -17,7 +17,10 @@ import { ImageKitProvider } from './imagekit.provider';
           },
           fileFilter: (req, file, cb) => {
             if (!file.mimetype.startsWith('image/')) {
-              return cb(new Error('Only image files are allowed'), false);
+              return cb(
+                new BadRequestException('Only image files are allowed'),
+                false,
+              );
             }
             cb(null, true);
           },

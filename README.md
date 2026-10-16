@@ -94,6 +94,7 @@ oday-tourism/
 │       ├── room/              # Rooms nested under hotels
 │       ├── addon/             # Add-ons nested under hotels
 │       ├── trip/              # Trip packages CRUD + translations
+│       ├── destination/       # Destination images shared by hotels & trips
 │       ├── offer/             # Promotional offers
 │       ├── photo-gallery/     # Photo gallery with media uploads
 │       ├── security-approval/ # Service types, airline & nationality pricing
@@ -160,6 +161,21 @@ Interactive documentation is available at `/api/docs`.
 | `GET` | `/trip/:id` | Get trip by ID |
 | `PATCH` | `/trip/:id` | Update trip |
 | `DELETE` | `/trip/:id` | Delete trip |
+
+---
+
+### Destinations
+
+Destinations are the fixed `DestinatiosnEnum` values shared by hotels (`destination`) and trips (`city`). Each destination can have one image.
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/destination` | List destinations with image, `hotels_count` and `trips_count` (`?type=hotels` or `?type=trips` returns only destinations that have hotels / trips) |
+| `GET` | `/destination/:destination` | Get one destination with its image and counts |
+| `PUT` | `/destination/:destination/image` | Set or replace the destination image (multipart field `image`) |
+| `DELETE` | `/destination/:destination/image` | Remove the destination image |
+
+To list a destination's hotels use `GET /hotel?destination=<DESTINATION>`, and for trips `GET /trip?city=<DESTINATION>`.
 
 ---
 
@@ -265,6 +281,7 @@ Trip  ──── TripTranslation
 
 Offer         ──── Asset
 PhotoGallery  ──── Asset
+DestinationImage ── Asset
 Gallery       ──── Asset
 
 SecurityServiceType ──── SecurityServiceTypeTranslation

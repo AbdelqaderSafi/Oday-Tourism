@@ -17,6 +17,7 @@ import { CommentModule } from './modules/comment/comment.module';
 import { QuestionModule } from './modules/question/question.module';
 import { TripAddonModule } from './modules/trip-addon/trip-addon.module';
 import { TripOptionModule } from './modules/trip-option/trip-option.module';
+import { DestinationModule } from './modules/destination/destination.module';
 import { AuthGuard } from './modules/auth/guards/auth.guard';
 
 @Module({
@@ -45,6 +46,7 @@ import { AuthGuard } from './modules/auth/guards/auth.guard';
     QuestionModule,
     TripAddonModule,
     TripOptionModule,
+    DestinationModule,
   ],
   controllers: [],
   providers: [
