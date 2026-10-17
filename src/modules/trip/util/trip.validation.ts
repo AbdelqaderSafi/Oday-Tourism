@@ -78,6 +78,8 @@ const cityEnum = z.enum([
   'MARSA_MATROUH',
   'MARSA_ALAM',
   'FAYOUM',
+  'ASWAN',
+  'LUXOR',
 ]);
 
 export const tripValidationSchema = z.object({
@@ -139,6 +141,8 @@ export const tripPaginationSchema = paginationSchema.extend({
       'MARSA_MATROUH',
       'MARSA_ALAM',
       'FAYOUM',
+      'ASWAN',
+      'LUXOR',
     ])
     .optional(),
 }) satisfies z.ZodType<TripQuery>;

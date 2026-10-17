@@ -404,6 +404,8 @@ enum DestinatiosnEnum {
   MARSA_MATROUH
   MARSA_ALAM
   FAYOUM
+  ASWAN
+  LUXOR
 }
 
 enum ServiceTypeEnum {

@@ -78,6 +78,8 @@ export const hotelValidationSchema = z.object({
     'MARSA_MATROUH',
     'MARSA_ALAM',
     'FAYOUM',
+    'ASWAN',
+    'LUXOR',
   ]),
   initial_price: z.coerce
     .number()
@@ -133,6 +135,8 @@ export const updateHotelValidationSchema = z.object({
         'MARSA_MATROUH',
         'MARSA_ALAM',
         'FAYOUM',
+        'ASWAN',
+        'LUXOR',
       ]),
       z.literal('').transform(() => undefined),
     ])
@@ -198,6 +202,8 @@ export const hotelPaginationSchema = paginationSchema.extend({
       'MARSA_MATROUH',
       'MARSA_ALAM',
       'FAYOUM',
+      'ASWAN',
+      'LUXOR',
     ])
     .optional(),
   rating: z
