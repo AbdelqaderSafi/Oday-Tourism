@@ -23,6 +23,7 @@ export const CreateHotelSwagger = () =>
           'slug',
           'destination',
           'initial_price',
+          'initial_price_egp',
           'stars',
           'rating',
           'translations',
@@ -55,6 +56,13 @@ export const CreateHotelSwagger = () =>
             example: 'SHARM_EL_SHEIKH',
           },
           initial_price: { type: 'number', example: 250, minimum: 0 },
+          initial_price_egp: {
+            type: 'number',
+            example: 2500,
+            minimum: 0,
+            description:
+              'السعر الحالي بالجنيه المصري (لزوار فئة المصري المقيم في مصر)',
+          },
           stars: {
             type: 'string',
             enum: ['ONE', 'TWO', 'THREE', 'FOUR', 'FIVE'],
@@ -67,7 +75,12 @@ export const CreateHotelSwagger = () =>
           },
           meal_plan: {
             type: 'string',
-            enum: ['ALL_INCLUSIVE', 'BREAKFAST_ONLY', 'BREAKFAST_AND_DINNER', 'NO_MEALS'],
+            enum: [
+              'ALL_INCLUSIVE',
+              'BREAKFAST_ONLY',
+              'BREAKFAST_AND_DINNER',
+              'NO_MEALS',
+            ],
             example: 'BREAKFAST_ONLY',
             description: 'نوع الوجبات المشمولة (اختياري)',
           },
@@ -87,7 +100,15 @@ export const CreateHotelSwagger = () =>
             type: 'number',
             example: 300,
             minimum: 0,
-            description: 'السعر الأصلي قبل الخصم (اختياري)',
+            description:
+              'السعر الأصلي قبل الخصم بالدولار (مطلوب ويجب أن يكون أكبر من initial_price عند تفعيل الخصم)',
+          },
+          original_price_egp: {
+            type: 'number',
+            example: 3000,
+            minimum: 0,
+            description:
+              'السعر الأصلي قبل الخصم بالجنيه المصري (مطلوب ويجب أن يكون أكبر من initial_price_egp عند تفعيل الخصم، وقيمة فارغة تعني null)',
           },
           youtube_video_url: {
             type: 'string',
@@ -114,16 +135,16 @@ export const CreateHotelSwagger = () =>
           rooms: {
             type: 'string',
             example:
-              '[{"price":150,"translations":[{"language":"ar","name":"غرفة ديلوكس","description":"غرفة فاخرة مع إطلالة على البحر"},{"language":"en","name":"Deluxe Room","description":"Luxury room with sea view"}]}]',
+              '[{"price":150,"price_egp":1500,"translations":[{"language":"ar","name":"غرفة ديلوكس","description":"غرفة فاخرة مع إطلالة على البحر"},{"language":"en","name":"Deluxe Room","description":"Luxury room with sea view"}]}]',
             description:
-              'JSON string - مصفوفة الغرف (اختياري). كل غرفة تحتوي: price, translations[]',
+              'JSON string - مصفوفة الغرف (اختياري). كل غرفة تحتوي: price, price_egp, translations[]',
           },
           addons: {
             type: 'string',
             example:
-              '[{"price":50,"translations":[{"language":"ar","name":"إفطار","description":"وجبة إفطار فاخرة"},{"language":"en","name":"Breakfast","description":"Luxury breakfast"}]}]',
+              '[{"price":50,"price_egp":500,"translations":[{"language":"ar","name":"إفطار","description":"وجبة إفطار فاخرة"},{"language":"en","name":"Breakfast","description":"Luxury breakfast"}]}]',
             description:
-              'JSON string - مصفوفة الإضافات (اختياري). كل إضافة تحتوي: price, translations[]',
+              'JSON string - مصفوفة الإضافات (اختياري). كل إضافة تحتوي: price, price_egp, translations[]',
           },
         },
       },
@@ -207,11 +228,13 @@ export const FindOneHotelSwagger = () =>
           slug: 'al-nakheel-hotel',
           destination: 'SHARM_EL_SHEIKH',
           initial_price: '250.00',
+          initial_price_egp: '2500.00',
           stars: 'FIVE',
           rating: 'TOP_RATED',
           is_discounted: false,
           discount_percentage: null,
           original_price: null,
+          original_price_egp: null,
           youtube_video_url: null,
           is_deleted: false,
           created_at: '2026-03-07T10:00:00.000Z',
@@ -246,6 +269,7 @@ export const FindOneHotelSwagger = () =>
             {
               id: 'room-uuid',
               price: '150.00',
+              price_egp: '1500.00',
               is_deleted: false,
               translations: [
                 {
@@ -269,6 +293,7 @@ export const FindOneHotelSwagger = () =>
             {
               id: 'addon-uuid',
               price: '50.00',
+              price_egp: '500.00',
               is_deleted: false,
               translations: [
                 {
@@ -337,6 +362,13 @@ export const UpdateHotelSwagger = () =>
             example: 'EL_GHARDQA',
           },
           initial_price: { type: 'number', example: 300, minimum: 0 },
+          initial_price_egp: {
+            type: 'number',
+            example: 3000,
+            minimum: 0,
+            description:
+              'السعر الحالي بالجنيه المصري (لزوار فئة المصري المقيم في مصر)',
+          },
           stars: {
             type: 'string',
             enum: ['ONE', 'TWO', 'THREE', 'FOUR', 'FIVE'],
@@ -348,12 +380,23 @@ export const UpdateHotelSwagger = () =>
           },
           meal_plan: {
             type: 'string',
-            enum: ['ALL_INCLUSIVE', 'BREAKFAST_ONLY', 'BREAKFAST_AND_DINNER', 'NO_MEALS'],
+            enum: [
+              'ALL_INCLUSIVE',
+              'BREAKFAST_ONLY',
+              'BREAKFAST_AND_DINNER',
+              'NO_MEALS',
+            ],
             description: 'نوع الوجبات المشمولة (اختياري)',
           },
           is_discounted: { type: 'boolean' },
           discount_percentage: { type: 'number', minimum: 0, maximum: 100 },
           original_price: { type: 'number', minimum: 0 },
+          original_price_egp: {
+            type: 'number',
+            minimum: 0,
+            description:
+              'السعر الأصلي بالجنيه المصري (لزوار فئة المصري المقيم في مصر)',
+          },
           youtube_video_url: { type: 'string' },
           translations: {
             type: 'string',
@@ -365,16 +408,16 @@ export const UpdateHotelSwagger = () =>
           rooms: {
             type: 'string',
             example:
-              '[{"price":150,"translations":[{"language":"ar","name":"غرفة ديلوكس","description":"غرفة فاخرة مع إطلالة على البحر"},{"language":"en","name":"Deluxe Room","description":"Luxury room with sea view"}]}]',
+              '[{"price":150,"price_egp":1500,"translations":[{"language":"ar","name":"غرفة ديلوكس","description":"غرفة فاخرة مع إطلالة على البحر"},{"language":"en","name":"Deluxe Room","description":"Luxury room with sea view"}]}]',
             description:
-              'JSON string - غرف جديدة تُضاف للفندق (اختياري). كل غرفة تحتوي: price, translations[]',
+              'JSON string - الغرف (اختياري). إرسالها يستبدل الغرف الحالية، ومصفوفة فارغة تحذفها، وعدم إرسالها يُبقيها (اختياري). كل غرفة تحتوي: price, price_egp, translations[]',
           },
           addons: {
             type: 'string',
             example:
-              '[{"price":50,"translations":[{"language":"ar","name":"إفطار","description":"وجبة إفطار فاخرة"},{"language":"en","name":"Breakfast","description":"Luxury breakfast"}]}]',
+              '[{"price":50,"price_egp":500,"translations":[{"language":"ar","name":"إفطار","description":"وجبة إفطار فاخرة"},{"language":"en","name":"Breakfast","description":"Luxury breakfast"}]}]',
             description:
-              'JSON string - إضافات جديدة تُضاف للفندق (اختياري). كل إضافة تحتوي: price, translations[]',
+              'JSON string - الإضافات (اختياري). إرسالها يستبدل الإضافات الحالية، ومصفوفة فارغة تحذفها، وعدم إرسالها يُبقيها (اختياري). كل إضافة تحتوي: price, price_egp, translations[]',
           },
           'deleteAssetIds[0]': {
             type: 'string',

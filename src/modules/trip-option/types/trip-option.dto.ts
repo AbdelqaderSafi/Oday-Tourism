@@ -8,6 +8,7 @@ export type TripOptionTranslationInput = {
 
 export type CreateTripOptionDto = {
   price: Prisma.Decimal;
+  price_egp?: Prisma.Decimal | null;
   translations: TripOptionTranslationInput[];
 };
 

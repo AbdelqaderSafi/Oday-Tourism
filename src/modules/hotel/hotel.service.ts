@@ -10,6 +10,7 @@ import { DatabaseService } from '../database/database.service';
 import { FileService } from '../file/file.service';
 import { HotelQuery } from './types/hotel.types';
 import { removeFields } from '../utils/object.util';
+import { getDiscountPriceIssues, throwPriceIssues } from '../utils/price.util';
 
 @Injectable()
 export class HotelService {
@@ -77,12 +78,13 @@ export class HotelService {
       if (addons?.length) {
         for (const addon of addons) {
           const addonId = randomUUID();
-          const { translations: addonTranslations, price } = addon;
+          const { translations: addonTranslations, price, price_egp } = addon;
           await tx.hotelAddon.create({
             data: {
               id: addonId,
               hotel_id: hotelId,
-              price: price as Prisma.Decimal,
+              price,
+              price_egp,
             },
           });
           for (const t of addonTranslations) {
@@ -119,8 +121,14 @@ export class HotelService {
         include: {
           assets: true,
           translations: true,
-          rooms: { include: { translations: true } },
-          addons: { include: { translations: true } },
+          rooms: {
+            where: { is_deleted: false },
+            include: { translations: true },
+          },
+          addons: {
+            where: { is_deleted: false },
+            include: { translations: true },
+          },
         },
       });
     });
@@ -141,8 +149,14 @@ export class HotelService {
         include: {
           assets: true,
           translations: true,
-          rooms: { include: { translations: true } },
-          addons: { include: { translations: true } },
+          rooms: {
+            where: { is_deleted: false },
+            include: { translations: true },
+          },
+          addons: {
+            where: { is_deleted: false },
+            include: { translations: true },
+          },
         },
       });
 
@@ -167,8 +181,14 @@ export class HotelService {
       include: {
         assets: true,
         translations: true,
-        rooms: { include: { translations: true } },
-        addons: { include: { translations: true } },
+        rooms: {
+          where: { is_deleted: false },
+          include: { translations: true },
+        },
+        addons: {
+          where: { is_deleted: false },
+          include: { translations: true },
+        },
       },
     });
   }
@@ -189,6 +209,22 @@ export class HotelService {
 
     const { deleteAssetIds, translations, rooms, addons, ...rest } =
       updateHotelDto;
+
+    const discountFields = [
+      'is_discounted',
+      'initial_price',
+      'initial_price_egp',
+      'original_price',
+      'original_price_egp',
+    ] as const;
+    if (discountFields.some((field) => rest[field] !== undefined)) {
+      const merged = { ...hotel };
+      for (const field of discountFields) {
+        if (rest[field] !== undefined)
+          Object.assign(merged, { [field]: rest[field] });
+      }
+      throwPriceIssues(getDiscountPriceIssues(merged));
+    }
 
     const fileIdsToDelete = hotel.assets
       .filter((a) => deleteAssetIds?.includes(a.id))
@@ -243,7 +279,7 @@ export class HotelService {
         }
       }
 
-      if (rooms?.length) {
+      if (rooms !== undefined) {
         const existingRooms = await tx.room.findMany({
           where: { hotel_id: id },
           select: { id: true },
@@ -273,7 +309,7 @@ export class HotelService {
         }
       }
 
-      if (addons?.length) {
+      if (addons !== undefined) {
         const existingAddons = await tx.hotelAddon.findMany({
           where: { hotel_id: id },
           select: { id: true },
@@ -286,9 +322,9 @@ export class HotelService {
         }
         for (const addon of addons) {
           const addonId = randomUUID();
-          const { translations: addonTranslations, price } = addon;
+          const { translations: addonTranslations, price, price_egp } = addon;
           await tx.hotelAddon.create({
-            data: { id: addonId, hotel_id: id, price: price as Prisma.Decimal },
+            data: { id: addonId, hotel_id: id, price, price_egp },
           });
           for (const t of addonTranslations) {
             await tx.hotelAddonTranslation.create({
@@ -332,8 +368,14 @@ export class HotelService {
       include: {
         assets: true,
         translations: true,
-        rooms: { include: { translations: true } },
-        addons: { include: { translations: true } },
+        rooms: {
+          where: { is_deleted: false },
+          include: { translations: true },
+        },
+        addons: {
+          where: { is_deleted: false },
+          include: { translations: true },
+        },
       },
     });
   }

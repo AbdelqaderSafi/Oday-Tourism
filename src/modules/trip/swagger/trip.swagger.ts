@@ -23,6 +23,7 @@ export const CreateTripSwagger = () =>
           'slug',
           'city',
           'price',
+          'price_egp',
           'start_time',
           'end_time',
           'translations',
@@ -56,6 +57,13 @@ export const CreateTripSwagger = () =>
             description: 'المدينة التي تنطلق منها الرحلة',
           },
           price: { type: 'number', example: 350, minimum: 0 },
+          price_egp: {
+            type: 'number',
+            example: 3500,
+            minimum: 0,
+            description:
+              'سعر البداية بالجنيه المصري (لزوار فئة المصري المقيم في مصر)',
+          },
           start_time: {
             type: 'string',
             example: '8:00 AM',
@@ -91,16 +99,16 @@ export const CreateTripSwagger = () =>
           options: {
             type: 'string',
             example:
-              '[{"price":100,"translations":[{"language":"ar","name":"خيار قياسي","description":"وصف الخيار القياسي"},{"language":"en","name":"Standard Option","description":"Standard option description"}]}]',
+              '[{"price":100,"price_egp":1000,"translations":[{"language":"ar","name":"خيار قياسي","description":"وصف الخيار القياسي"},{"language":"en","name":"Standard Option","description":"Standard option description"}]}]',
             description:
-              'JSON string - مصفوفة الخيارات (اختياري). كل خيار يحتوي: price, translations[] (name مطلوب، description اختياري)',
+              'JSON string - مصفوفة الخيارات (اختياري). كل خيار يحتوي: price, price_egp, translations[] (name مطلوب، description اختياري)',
           },
           addons: {
             type: 'string',
             example:
-              '[{"price":50,"translations":[{"language":"ar","name":"وجبة عشاء","description":"عشاء فاخر"},{"language":"en","name":"Dinner","description":"Luxury dinner"}]}]',
+              '[{"price":50,"price_egp":500,"translations":[{"language":"ar","name":"وجبة عشاء","description":"عشاء فاخر"},{"language":"en","name":"Dinner","description":"Luxury dinner"}]}]',
             description:
-              'JSON string - مصفوفة الإضافات (اختياري). كل إضافة تحتوي: price, translations[]',
+              'JSON string - مصفوفة الإضافات (اختياري). كل إضافة تحتوي: price, price_egp, translations[]',
           },
         },
       },
@@ -114,7 +122,8 @@ export const FindAllTripsSwagger = () =>
   applyDecorators(
     ApiOperation({
       summary: 'جلب جميع الرحلات',
-      description: 'جلب الرحلات مع الترجمات والصور، مع دعم الـ pagination والفلترة بالمدينة',
+      description:
+        'جلب الرحلات مع الترجمات والصور، مع دعم الـ pagination والفلترة بالمدينة',
     }),
     ApiQuery({
       name: 'page',
@@ -176,6 +185,7 @@ export const FindOneTripSwagger = () =>
           id: 'bf176f2b-d79a-4b70-a8dd-e9f86f191371',
           slug: 'cairo-historical-trip',
           price: '350.00',
+          price_egp: '3500.00',
           start_time: '8:00 AM',
           end_time: '6:00 PM',
           youtube_video_url: null,
@@ -217,6 +227,7 @@ export const FindOneTripSwagger = () =>
             {
               id: 'option-uuid',
               price: '100.00',
+              price_egp: '1000.00',
               is_deleted: false,
               translations: [
                 {
@@ -240,6 +251,7 @@ export const FindOneTripSwagger = () =>
             {
               id: 'addon-uuid',
               price: '50.00',
+              price_egp: '500.00',
               is_deleted: false,
               translations: [
                 {
@@ -309,12 +321,20 @@ export const UpdateTripSwagger = () =>
             description: 'المدينة التي تنطلق منها الرحلة (اختياري)',
           },
           price: { type: 'number', example: 400, minimum: 0 },
+          price_egp: {
+            type: 'number',
+            example: 4000,
+            minimum: 0,
+            description:
+              'سعر البداية بالجنيه المصري (لزوار فئة المصري المقيم في مصر)',
+          },
           start_time: { type: 'string', example: '9:00 AM' },
           end_time: { type: 'string', example: '7:00 PM' },
           youtube_video_url: {
             type: 'string',
             example: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-            description: 'رابط فيديو يوتيوب (اختياري، أرسل سلسلة فارغة لإزالته)',
+            description:
+              'رابط فيديو يوتيوب (اختياري، أرسل سلسلة فارغة لإزالته)',
           },
           translations: {
             type: 'string',
@@ -326,16 +346,16 @@ export const UpdateTripSwagger = () =>
           options: {
             type: 'string',
             example:
-              '[{"price":100,"translations":[{"language":"ar","name":"خيار قياسي","description":"وصف الخيار القياسي"},{"language":"en","name":"Standard Option","description":"Standard option description"}]}]',
+              '[{"price":100,"price_egp":1000,"translations":[{"language":"ar","name":"خيار قياسي","description":"وصف الخيار القياسي"},{"language":"en","name":"Standard Option","description":"Standard option description"}]}]',
             description:
-              'JSON string - خيارات جديدة تُضاف للرحلة (اختياري). كل خيار يحتوي: price, translations[] (name مطلوب، description اختياري)',
+              'JSON string - الخيارات (اختياري). إرسالها يستبدل الخيارات الحالية، ومصفوفة فارغة تحذفها، وعدم إرسالها يُبقيها (اختياري). كل خيار يحتوي: price, price_egp, translations[] (name مطلوب، description اختياري)',
           },
           addons: {
             type: 'string',
             example:
-              '[{"price":50,"translations":[{"language":"ar","name":"وجبة عشاء","description":"عشاء فاخر"},{"language":"en","name":"Dinner","description":"Luxury dinner"}]}]',
+              '[{"price":50,"price_egp":500,"translations":[{"language":"ar","name":"وجبة عشاء","description":"عشاء فاخر"},{"language":"en","name":"Dinner","description":"Luxury dinner"}]}]',
             description:
-              'JSON string - إضافات جديدة تُضاف للرحلة (اختياري). كل إضافة تحتوي: price, translations[]',
+              'JSON string - الإضافات (اختياري). إرسالها يستبدل الإضافات الحالية، ومصفوفة فارغة تحذفها، وعدم إرسالها يُبقيها (اختياري). كل إضافة تحتوي: price, price_egp, translations[]',
           },
           'deleteAssetIds[0]': {
             type: 'string',

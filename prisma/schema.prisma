@@ -77,12 +77,14 @@ model hotels {
   slug                String              @unique @db.VarChar(255)
   destination         DestinatiosnEnum
   initial_price       Decimal             @db.Decimal(10, 2)
+  initial_price_egp   Decimal?            @db.Decimal(10, 2)
   stars               hotels_stars
   rating              HotelFilterRating
   meal_plan           HotelMealPlan?
   is_discounted       Boolean             @default(false)
   discount_percentage Decimal?            @db.Decimal(5, 2)
   original_price      Decimal?            @db.Decimal(10, 2)
+  original_price_egp  Decimal?            @db.Decimal(10, 2)
   youtube_video_url   String?             @db.Text
   is_deleted          Boolean             @default(false)
   created_at          DateTime            @default(now())
@@ -109,6 +111,7 @@ model HotelTranslation {
 model HotelAddon {
   id           String                  @id @default(uuid()) @db.VarChar(36)
   price        Decimal                 @db.Decimal(10, 2)
+  price_egp    Decimal?                @db.Decimal(10, 2)
   hotel_id     String                  @db.VarChar(36)
   is_deleted   Boolean                 @default(false)
   created_at   DateTime                @default(now())
@@ -135,6 +138,7 @@ model HotelAddonTranslation {
 model TripAddon {
   id           String                 @id @default(uuid()) @db.VarChar(36)
   price        Decimal                @db.Decimal(10, 2)
+  price_egp    Decimal?               @db.Decimal(10, 2)
   trip_id      String                 @db.VarChar(36)
   is_deleted   Boolean                @default(false)
   created_at   DateTime               @default(now())
@@ -161,6 +165,7 @@ model TripAddonTranslation {
 model Room {
   id           String            @id @default(uuid()) @db.VarChar(36)
   price        Decimal           @db.Decimal(10, 2)
+  price_egp    Decimal?          @db.Decimal(10, 2)
   hotel_id     String            @db.VarChar(36)
   is_deleted   Boolean           @default(false)
   created_at   DateTime          @default(now())
@@ -233,6 +238,7 @@ model trips {
   slug               String            @unique @db.VarChar(255)
   city               DestinatiosnEnum
   price              Decimal           @db.Decimal(10, 2)
+  price_egp          Decimal?          @db.Decimal(10, 2)
   start_time         String            @db.VarChar(255)
   end_time           String            @db.VarChar(255)
   youtube_video_url  String?           @db.Text
@@ -263,6 +269,7 @@ model TripTranslation {
 model TripOption {
   id           String              @id @default(uuid()) @db.VarChar(36)
   price        Decimal             @db.Decimal(10, 2)
+  price_egp    Decimal?            @db.Decimal(10, 2)
   trip_id      String              @db.VarChar(36)
   is_deleted   Boolean             @default(false)
   created_at   DateTime            @default(now())

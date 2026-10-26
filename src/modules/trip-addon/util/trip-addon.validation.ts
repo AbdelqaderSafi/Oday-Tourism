@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { Prisma } from 'generated/prisma/client';
+import { nullablePriceField, priceField } from 'src/modules/utils/price.util';
 
 const tripAddonTranslationSchema = z.object({
   language: z.enum(['ar', 'en']),
@@ -8,18 +8,13 @@ const tripAddonTranslationSchema = z.object({
 });
 
 export const createTripAddonValidationSchema = z.object({
-  price: z.coerce
-    .number()
-    .min(0)
-    .transform((val) => new Prisma.Decimal(val)),
+  price: priceField,
+  price_egp: nullablePriceField.optional(),
   translations: z.array(tripAddonTranslationSchema).min(1).max(2),
 });
 
 export const updateTripAddonValidationSchema = z.object({
-  price: z.coerce
-    .number()
-    .min(0)
-    .transform((val) => new Prisma.Decimal(val))
-    .optional(),
+  price: priceField.optional(),
+  price_egp: nullablePriceField.optional(),
   translations: z.array(tripAddonTranslationSchema).min(1).max(2).optional(),
 });

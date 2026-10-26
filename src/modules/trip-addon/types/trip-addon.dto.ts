@@ -8,6 +8,7 @@ export type TripAddonTranslationInput = {
 
 export type CreateTripAddonDto = {
   price: Prisma.Decimal;
+  price_egp?: Prisma.Decimal | null;
   translations: TripAddonTranslationInput[];
 };
 

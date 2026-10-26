@@ -16,11 +16,17 @@ export type TranslationInput = {
 
 export type RoomInput = {
   price: Prisma.Decimal;
-  translations: { language: LanguageEnum; name: string; description?: string }[];
+  price_egp: Prisma.Decimal;
+  translations: {
+    language: LanguageEnum;
+    name: string;
+    description?: string;
+  }[];
 };
 
 export type AddonInput = {
   price: Prisma.Decimal;
+  price_egp: Prisma.Decimal;
   translations: { language: LanguageEnum; name: string; description: string }[];
 };
 
@@ -28,12 +34,14 @@ export type CreateHotelDto = {
   slug: string;
   destination: DestinatiosnEnum;
   initial_price: Prisma.Decimal;
+  initial_price_egp: Prisma.Decimal;
   stars: hotels_stars;
   rating: HotelFilterRating;
   meal_plan?: HotelMealPlan;
   is_discounted?: boolean;
   discount_percentage?: Prisma.Decimal;
-  original_price?: Prisma.Decimal;
+  original_price?: Prisma.Decimal | null;
+  original_price_egp?: Prisma.Decimal | null;
   youtube_video_url?: string;
   translations: TranslationInput[];
   rooms?: RoomInput[];

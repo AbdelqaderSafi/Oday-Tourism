@@ -1,4 +1,8 @@
-import { DestinatiosnEnum, LanguageEnum, Prisma } from 'generated/prisma/client';
+import {
+  DestinatiosnEnum,
+  LanguageEnum,
+  Prisma,
+} from 'generated/prisma/client';
 
 export type TripTranslationInput = {
   language: LanguageEnum;
@@ -11,11 +15,17 @@ export type TripTranslationInput = {
 
 export type TripOptionInput = {
   price: Prisma.Decimal;
-  translations: { language: LanguageEnum; name: string; description?: string }[];
+  price_egp: Prisma.Decimal;
+  translations: {
+    language: LanguageEnum;
+    name: string;
+    description?: string;
+  }[];
 };
 
 export type TripAddonInput = {
   price: Prisma.Decimal;
+  price_egp: Prisma.Decimal;
   translations: { language: LanguageEnum; name: string; description: string }[];
 };
 
@@ -23,6 +33,7 @@ export type CreateTripDto = {
   slug: string;
   city: DestinatiosnEnum;
   price: Prisma.Decimal;
+  price_egp: Prisma.Decimal;
   start_time: string;
   end_time: string;
   youtube_video_url?: string;

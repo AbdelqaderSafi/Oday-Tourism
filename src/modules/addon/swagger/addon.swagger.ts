@@ -11,6 +11,14 @@ export const CreateAddonSwagger = () =>
         required: ['price', 'translations'],
         properties: {
           price: { type: 'number', example: 50, minimum: 0 },
+          price_egp: {
+            type: 'number',
+            example: 500,
+            minimum: 0,
+            nullable: true,
+            description:
+              'السعر بالجنيه المصري (اختياري، القيمة الفارغة تعني null)',
+          },
           translations: {
             type: 'array',
             items: {
@@ -69,6 +77,14 @@ export const UpdateAddonSwagger = () =>
         type: 'object',
         properties: {
           price: { type: 'number', example: 70, minimum: 0 },
+          price_egp: {
+            type: 'number',
+            example: 700,
+            minimum: 0,
+            nullable: true,
+            description:
+              'السعر بالجنيه المصري (اختياري، القيمة الفارغة تعني null)',
+          },
           translations: {
             type: 'array',
             items: {

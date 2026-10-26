@@ -2,6 +2,11 @@ import { z } from 'zod';
 import { paginationSchema } from 'src/modules/utils/api.util';
 import { HotelQuery } from '../types/hotel.types';
 import { Prisma } from 'generated/prisma/client';
+import {
+  getDiscountPriceIssues,
+  nullablePriceField,
+  priceField,
+} from 'src/modules/utils/price.util';
 
 const translationSchema = z.object({
   language: z.enum(['ar', 'en']),
@@ -17,10 +22,8 @@ const translationsField = z
   .pipe(z.array(translationSchema).min(1).max(2));
 
 const roomInputSchema = z.object({
-  price: z.coerce
-    .number()
-    .min(0)
-    .transform((val) => new Prisma.Decimal(val)),
+  price: priceField,
+  price_egp: priceField,
   translations: z
     .array(
       z.object({
@@ -34,10 +37,8 @@ const roomInputSchema = z.object({
 });
 
 const addonInputSchema = z.object({
-  price: z.coerce
-    .number()
-    .min(0)
-    .transform((val) => new Prisma.Decimal(val)),
+  price: priceField,
+  price_egp: priceField,
   translations: z
     .array(
       z.object({
@@ -63,50 +64,62 @@ const addonsField = z
   .pipe(z.array(addonInputSchema))
   .optional();
 
-export const hotelValidationSchema = z.object({
-  slug: z.string().min(2).max(255),
-  destination: z.enum([
-    'SHARM_EL_SHEIKH',
-    'EL_GHARDQA',
-    'EL_AIN_SOKHNA',
-    'DAHAB',
-    'EL_GOUNA',
-    'NORTH_COAST',
-    'CAIRO',
-    'ALEXANDRIA',
-    'SAHL_HASHEESH',
-    'MARSA_MATROUH',
-    'MARSA_ALAM',
-    'FAYOUM',
-    'ASWAN',
-    'LUXOR',
-  ]),
-  initial_price: z.coerce
-    .number()
-    .min(0)
-    .transform((val) => new Prisma.Decimal(val)),
-  stars: z.enum(['ONE', 'TWO', 'THREE', 'FOUR', 'FIVE']),
-  rating: z.enum(['UNRATED', 'MOST_BOOKED', 'TOP_RATED', 'LOWEST_PRICE']),
-  meal_plan: z.enum(['ALL_INCLUSIVE', 'BREAKFAST_ONLY', 'BREAKFAST_AND_DINNER', 'NO_MEALS']).optional(),
-  is_discounted: z
-    .union([z.boolean(), z.string().transform((val) => val === 'true')])
-    .default(false),
-  discount_percentage: z.coerce
-    .number()
-    .min(0)
-    .max(100)
-    .transform((val) => new Prisma.Decimal(val))
-    .optional(),
-  original_price: z.coerce
-    .number()
-    .min(0)
-    .transform((val) => new Prisma.Decimal(val))
-    .optional(),
-  youtube_video_url: z.union([z.string().url(), z.literal('')]).optional(),
-  translations: translationsField,
-  rooms: roomsField,
-  addons: addonsField,
-});
+export const hotelValidationSchema = z
+  .object({
+    slug: z.string().min(2).max(255),
+    destination: z.enum([
+      'SHARM_EL_SHEIKH',
+      'EL_GHARDQA',
+      'EL_AIN_SOKHNA',
+      'DAHAB',
+      'EL_GOUNA',
+      'NORTH_COAST',
+      'CAIRO',
+      'ALEXANDRIA',
+      'SAHL_HASHEESH',
+      'MARSA_MATROUH',
+      'MARSA_ALAM',
+      'FAYOUM',
+      'ASWAN',
+      'LUXOR',
+    ]),
+    initial_price: priceField,
+    initial_price_egp: priceField,
+    stars: z.enum(['ONE', 'TWO', 'THREE', 'FOUR', 'FIVE']),
+    rating: z.enum(['UNRATED', 'MOST_BOOKED', 'TOP_RATED', 'LOWEST_PRICE']),
+    meal_plan: z
+      .enum([
+        'ALL_INCLUSIVE',
+        'BREAKFAST_ONLY',
+        'BREAKFAST_AND_DINNER',
+        'NO_MEALS',
+      ])
+      .optional(),
+    is_discounted: z
+      .union([z.boolean(), z.string().transform((val) => val === 'true')])
+      .default(false),
+    discount_percentage: z.coerce
+      .number()
+      .min(0)
+      .max(100)
+      .transform((val) => new Prisma.Decimal(val))
+      .optional(),
+    original_price: nullablePriceField.optional(),
+    original_price_egp: nullablePriceField.optional(),
+    youtube_video_url: z.union([z.string().url(), z.literal('')]).optional(),
+    translations: translationsField,
+    rooms: roomsField,
+    addons: addonsField,
+  })
+  .superRefine((hotel, ctx) => {
+    for (const issue of getDiscountPriceIssues(hotel)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: [issue.field],
+        message: issue.message,
+      });
+    }
+  });
 
 // Zod v4 uuid() is overly strict with version/variant bits.
 // Also trim whitespace/newlines that multipart/form-data can append to field values.
@@ -141,11 +154,8 @@ export const updateHotelValidationSchema = z.object({
       z.literal('').transform(() => undefined),
     ])
     .optional(),
-  initial_price: z.coerce
-    .number()
-    .min(0)
-    .transform((val) => new Prisma.Decimal(val))
-    .optional(),
+  initial_price: priceField.optional(),
+  initial_price_egp: priceField.optional(),
   stars: z
     .union([
       z.enum(['ONE', 'TWO', 'THREE', 'FOUR', 'FIVE']),
@@ -160,7 +170,12 @@ export const updateHotelValidationSchema = z.object({
     .optional(),
   meal_plan: z
     .union([
-      z.enum(['ALL_INCLUSIVE', 'BREAKFAST_ONLY', 'BREAKFAST_AND_DINNER', 'NO_MEALS']),
+      z.enum([
+        'ALL_INCLUSIVE',
+        'BREAKFAST_ONLY',
+        'BREAKFAST_AND_DINNER',
+        'NO_MEALS',
+      ]),
       z.literal('').transform(() => undefined),
     ])
     .optional(),
@@ -173,11 +188,8 @@ export const updateHotelValidationSchema = z.object({
     .max(100)
     .transform((val) => new Prisma.Decimal(val))
     .optional(),
-  original_price: z.coerce
-    .number()
-    .min(0)
-    .transform((val) => new Prisma.Decimal(val))
-    .optional(),
+  original_price: nullablePriceField.optional(),
+  original_price_egp: nullablePriceField.optional(),
   youtube_video_url: z.union([z.string().url(), z.literal('')]).optional(),
   translations: translationsField.optional(),
   rooms: roomsField,

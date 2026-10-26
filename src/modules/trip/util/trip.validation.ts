@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { paginationSchema } from 'src/modules/utils/api.util';
 import { TripQuery } from '../types/trip.types';
-import { Prisma } from 'generated/prisma/client';
+import { priceField } from 'src/modules/utils/price.util';
 
 const tripTranslationSchema = z.object({
   language: z.enum(['ar', 'en']),
@@ -19,10 +19,8 @@ const translationsField = z
   .pipe(z.array(tripTranslationSchema).min(1).max(2));
 
 const tripOptionInputSchema = z.object({
-  price: z.coerce
-    .number()
-    .min(0)
-    .transform((val) => new Prisma.Decimal(val)),
+  price: priceField,
+  price_egp: priceField,
   translations: z
     .array(
       z.object({
@@ -36,10 +34,8 @@ const tripOptionInputSchema = z.object({
 });
 
 const tripAddonInputSchema = z.object({
-  price: z.coerce
-    .number()
-    .min(0)
-    .transform((val) => new Prisma.Decimal(val)),
+  price: priceField,
+  price_egp: priceField,
   translations: z
     .array(
       z.object({
@@ -85,10 +81,8 @@ const cityEnum = z.enum([
 export const tripValidationSchema = z.object({
   slug: z.string().min(2).max(255),
   city: cityEnum,
-  price: z.coerce
-    .number()
-    .min(0)
-    .transform((val) => new Prisma.Decimal(val)),
+  price: priceField,
+  price_egp: priceField,
   start_time: z.string().min(1).max(255),
   end_time: z.string().min(1).max(255),
   youtube_video_url: z.union([z.string().url(), z.literal('')]).optional(),
@@ -110,11 +104,8 @@ const uuidLike = z
 export const updateTripValidationSchema = z.object({
   slug: z.string().min(2).max(255).optional(),
   city: cityEnum.optional(),
-  price: z.coerce
-    .number()
-    .min(0)
-    .transform((val) => new Prisma.Decimal(val))
-    .optional(),
+  price: priceField.optional(),
+  price_egp: priceField.optional(),
   start_time: z.string().min(1).max(255).optional(),
   end_time: z.string().min(1).max(255).optional(),
   youtube_video_url: z.union([z.string().url(), z.literal('')]).optional(),

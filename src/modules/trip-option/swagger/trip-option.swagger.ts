@@ -11,6 +11,14 @@ export const CreateTripOptionSwagger = () =>
         required: ['price', 'translations'],
         properties: {
           price: { type: 'number', example: 100, minimum: 0 },
+          price_egp: {
+            type: 'number',
+            example: 1000,
+            minimum: 0,
+            nullable: true,
+            description:
+              'السعر بالجنيه المصري (اختياري، القيمة الفارغة تعني null)',
+          },
           translations: {
             type: 'array',
             items: {
@@ -19,7 +27,10 @@ export const CreateTripOptionSwagger = () =>
               properties: {
                 language: { type: 'string', enum: ['ar', 'en'], example: 'ar' },
                 name: { type: 'string', example: 'VIP' },
-                description: { type: 'string', example: 'خيار VIP مع مميزات إضافية' },
+                description: {
+                  type: 'string',
+                  example: 'خيار VIP مع مميزات إضافية',
+                },
               },
             },
             example: [
@@ -69,6 +80,14 @@ export const UpdateTripOptionSwagger = () =>
         type: 'object',
         properties: {
           price: { type: 'number', example: 120, minimum: 0 },
+          price_egp: {
+            type: 'number',
+            example: 1200,
+            minimum: 0,
+            nullable: true,
+            description:
+              'السعر بالجنيه المصري (اختياري، القيمة الفارغة تعني null)',
+          },
           translations: {
             type: 'array',
             items: {

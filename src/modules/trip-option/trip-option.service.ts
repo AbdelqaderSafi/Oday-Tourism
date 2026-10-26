@@ -1,7 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { DatabaseService } from '../database/database.service';
-import { CreateTripOptionDto, UpdateTripOptionDto } from './types/trip-option.dto';
+import {
+  CreateTripOptionDto,
+  UpdateTripOptionDto,
+} from './types/trip-option.dto';
 import { Prisma } from 'generated/prisma/client';
 
 @Injectable()
@@ -15,7 +18,7 @@ export class TripOptionService {
     if (!trip) throw new NotFoundException('الرحلة غير موجودة');
 
     const optionId = randomUUID();
-    const { translations, price } = dto;
+    const { translations, price, price_egp } = dto;
 
     return this.prismaService.$transaction(async (tx) => {
       await tx.tripOption.create({
@@ -23,6 +26,7 @@ export class TripOptionService {
           id: optionId,
           trip_id: tripId,
           price: price as Prisma.Decimal,
+          price_egp,
         },
       });
 
@@ -61,13 +65,14 @@ export class TripOptionService {
     });
     if (!option) throw new NotFoundException('الخيار غير موجود');
 
-    const { translations, price } = dto;
+    const { translations, price, price_egp } = dto;
 
     return this.prismaService.$transaction(async (tx) => {
       await tx.tripOption.update({
         where: { id },
         data: {
           ...(price !== undefined && { price: price as Prisma.Decimal }),
+          ...(price_egp !== undefined && { price_egp }),
         },
       });
 

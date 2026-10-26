@@ -11,6 +11,14 @@ export const CreateRoomSwagger = () =>
         required: ['price', 'translations'],
         properties: {
           price: { type: 'number', example: 150, minimum: 0 },
+          price_egp: {
+            type: 'number',
+            example: 1500,
+            minimum: 0,
+            nullable: true,
+            description:
+              'السعر بالجنيه المصري (اختياري، القيمة الفارغة تعني null)',
+          },
           translations: {
             type: 'array',
             items: {
@@ -19,12 +27,24 @@ export const CreateRoomSwagger = () =>
               properties: {
                 language: { type: 'string', enum: ['ar', 'en'], example: 'ar' },
                 name: { type: 'string', example: 'غرفة ديلوكس' },
-                description: { type: 'string', example: 'غرفة فاخرة مع إطلالة على البحر', nullable: true },
+                description: {
+                  type: 'string',
+                  example: 'غرفة فاخرة مع إطلالة على البحر',
+                  nullable: true,
+                },
               },
             },
             example: [
-              { language: 'ar', name: 'غرفة ديلوكس', description: 'غرفة فاخرة مع إطلالة على البحر' },
-              { language: 'en', name: 'Deluxe Room', description: 'Luxury room with sea view' },
+              {
+                language: 'ar',
+                name: 'غرفة ديلوكس',
+                description: 'غرفة فاخرة مع إطلالة على البحر',
+              },
+              {
+                language: 'en',
+                name: 'Deluxe Room',
+                description: 'Luxury room with sea view',
+              },
             ],
           },
         },
@@ -61,6 +81,14 @@ export const UpdateRoomSwagger = () =>
         type: 'object',
         properties: {
           price: { type: 'number', example: 200, minimum: 0 },
+          price_egp: {
+            type: 'number',
+            example: 2000,
+            minimum: 0,
+            nullable: true,
+            description:
+              'السعر بالجنيه المصري (اختياري، القيمة الفارغة تعني null)',
+          },
           translations: {
             type: 'array',
             items: {
@@ -68,7 +96,11 @@ export const UpdateRoomSwagger = () =>
               properties: {
                 language: { type: 'string', enum: ['ar', 'en'] },
                 name: { type: 'string', example: 'غرفة سويت' },
-                description: { type: 'string', example: 'غرفة واسعة مع جاكوزي', nullable: true },
+                description: {
+                  type: 'string',
+                  example: 'غرفة واسعة مع جاكوزي',
+                  nullable: true,
+                },
               },
             },
           },

@@ -61,12 +61,13 @@ export class TripService {
       if (options?.length) {
         for (const option of options) {
           const optionId = randomUUID();
-          const { translations: optionTranslations, price } = option;
+          const { translations: optionTranslations, price, price_egp } = option;
           await tx.tripOption.create({
             data: {
               id: optionId,
               trip_id: tripId,
-              price: price as Prisma.Decimal,
+              price,
+              price_egp,
             },
           });
           for (const t of optionTranslations) {
@@ -80,12 +81,13 @@ export class TripService {
       if (addons?.length) {
         for (const addon of addons) {
           const addonId = randomUUID();
-          const { translations: addonTranslations, price } = addon;
+          const { translations: addonTranslations, price, price_egp } = addon;
           await tx.tripAddon.create({
             data: {
               id: addonId,
               trip_id: tripId,
-              price: price as Prisma.Decimal,
+              price,
+              price_egp,
             },
           });
           for (const t of addonTranslations) {
@@ -122,8 +124,14 @@ export class TripService {
         include: {
           assets: true,
           translations: true,
-          options: { include: { translations: true } },
-          addons: { include: { translations: true } },
+          options: {
+            where: { is_deleted: false },
+            include: { translations: true },
+          },
+          addons: {
+            where: { is_deleted: false },
+            include: { translations: true },
+          },
         },
       });
     });
@@ -143,8 +151,14 @@ export class TripService {
         include: {
           assets: true,
           translations: true,
-          options: { include: { translations: true } },
-          addons: { include: { translations: true } },
+          options: {
+            where: { is_deleted: false },
+            include: { translations: true },
+          },
+          addons: {
+            where: { is_deleted: false },
+            include: { translations: true },
+          },
         },
       });
 
@@ -169,8 +183,14 @@ export class TripService {
       include: {
         assets: true,
         translations: true,
-        options: { include: { translations: true } },
-        addons: { include: { translations: true } },
+        options: {
+          where: { is_deleted: false },
+          include: { translations: true },
+        },
+        addons: {
+          where: { is_deleted: false },
+          include: { translations: true },
+        },
       },
     });
   }
@@ -263,16 +283,22 @@ export class TripService {
         }
       }
 
-      if (options?.length) {
+      if (options !== undefined) {
+        const existingOptions = await tx.tripOption.findMany({
+          where: { trip_id: id },
+          select: { id: true },
+        });
+        if (existingOptions.length) {
+          await tx.optionTranslation.deleteMany({
+            where: { option_id: { in: existingOptions.map((o) => o.id) } },
+          });
+          await tx.tripOption.deleteMany({ where: { trip_id: id } });
+        }
         for (const option of options) {
           const optionId = randomUUID();
-          const { translations: optionTranslations, price } = option;
+          const { translations: optionTranslations, price, price_egp } = option;
           await tx.tripOption.create({
-            data: {
-              id: optionId,
-              trip_id: id,
-              price: price as Prisma.Decimal,
-            },
+            data: { id: optionId, trip_id: id, price, price_egp },
           });
           for (const t of optionTranslations) {
             await tx.optionTranslation.create({
@@ -282,12 +308,22 @@ export class TripService {
         }
       }
 
-      if (addons?.length) {
+      if (addons !== undefined) {
+        const existingAddons = await tx.tripAddon.findMany({
+          where: { trip_id: id },
+          select: { id: true },
+        });
+        if (existingAddons.length) {
+          await tx.tripAddonTranslation.deleteMany({
+            where: { addon_id: { in: existingAddons.map((a) => a.id) } },
+          });
+          await tx.tripAddon.deleteMany({ where: { trip_id: id } });
+        }
         for (const addon of addons) {
           const addonId = randomUUID();
-          const { translations: addonTranslations, price } = addon;
+          const { translations: addonTranslations, price, price_egp } = addon;
           await tx.tripAddon.create({
-            data: { id: addonId, trip_id: id, price: price as Prisma.Decimal },
+            data: { id: addonId, trip_id: id, price, price_egp },
           });
           for (const t of addonTranslations) {
             await tx.tripAddonTranslation.create({
@@ -331,8 +367,14 @@ export class TripService {
       include: {
         assets: true,
         translations: true,
-        options: { include: { translations: true } },
-        addons: { include: { translations: true } },
+        options: {
+          where: { is_deleted: false },
+          include: { translations: true },
+        },
+        addons: {
+          where: { is_deleted: false },
+          include: { translations: true },
+        },
       },
     });
   }

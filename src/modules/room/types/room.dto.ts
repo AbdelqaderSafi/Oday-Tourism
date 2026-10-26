@@ -8,6 +8,7 @@ export type RoomTranslationInput = {
 
 export type CreateRoomDto = {
   price: Prisma.Decimal;
+  price_egp?: Prisma.Decimal | null;
   translations: RoomTranslationInput[];
 };
 

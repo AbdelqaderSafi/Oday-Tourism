@@ -8,6 +8,7 @@ export type AddonTranslationInput = {
 
 export type CreateAddonDto = {
   price: Prisma.Decimal;
+  price_egp?: Prisma.Decimal | null;
   translations: AddonTranslationInput[];
 };
 

@@ -15,7 +15,7 @@ export class TripAddonService {
     if (!trip) throw new NotFoundException('الرحلة غير موجودة');
 
     const addonId = randomUUID();
-    const { translations, price } = dto;
+    const { translations, price, price_egp } = dto;
 
     return this.prismaService.$transaction(async (tx) => {
       await tx.tripAddon.create({
@@ -23,6 +23,7 @@ export class TripAddonService {
           id: addonId,
           trip_id: tripId,
           price: price as Prisma.Decimal,
+          price_egp,
         },
       });
 
@@ -61,13 +62,14 @@ export class TripAddonService {
     });
     if (!addon) throw new NotFoundException('الإضافة غير موجودة');
 
-    const { translations, price } = dto;
+    const { translations, price, price_egp } = dto;
 
     return this.prismaService.$transaction(async (tx) => {
       await tx.tripAddon.update({
         where: { id },
         data: {
           ...(price !== undefined && { price: price as Prisma.Decimal }),
+          ...(price_egp !== undefined && { price_egp }),
         },
       });
 
