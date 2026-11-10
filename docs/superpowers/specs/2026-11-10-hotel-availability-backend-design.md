@@ -107,7 +107,8 @@ The request stays `multipart/form-data`; `rooms` and `delete_room_ids` are JSON 
   - a duplicate ID in either array;
   - an ID in both arrays;
   - `delete_room_ids` without `rooms_write_mode=by_id`;
-  - any `rooms_write_mode` value other than `by_id`.
+  - any `rooms_write_mode` value other than `by_id`;
+  - a row with `id` while `rooms_write_mode` is not `by_id`.
 - Rooms are never matched by translated name, position, capacity or price.
 
 ### 4.3 Legacy mode (no `rooms_write_mode`)
@@ -180,7 +181,7 @@ Semantics:
 
 The write runs in one transaction:
 
-1. `UPDATE hotels SET calendar_managed_at = COALESCE(calendar_managed_at, NOW(3)) WHERE id = ?`. This locks the hotel row first; the hotel PATCH (section 4.4) also locks the hotel before any room, so the two cannot deadlock.
+1. `UPDATE hotels SET calendar_managed_at = COALESCE(calendar_managed_at, UTC_TIMESTAMP(3)) WHERE id = ?`. This locks the hotel row first; the hotel PATCH (section 4.4) also locks the hotel before any room, so the two cannot deadlock.
 2. `UPDATE room SET calendar_revision = calendar_revision + 1 WHERE id = ? AND hotel_id = ? AND is_deleted = 0 AND calendar_revision = ?`. Zero affected rows means `409 CALENDAR_CONFLICT`; existence was already checked for the 404.
 3. For each change, one multi-row `INSERT … ON DUPLICATE KEY UPDATE` covering its nights. The update clause sets only the provided columns, using bound constants rather than the `VALUES()` function (deprecated since MySQL 8.0.20), so the same SQL runs on MySQL and MariaDB. New rows use `available_units = 0` and `null` overrides for fields that were not provided.
 
@@ -368,7 +369,7 @@ Error bodies for the routes in this design:
 
 - `message` is Arabic, like the rest of the API, and clients branch on `code`. `field` is present when one request field is to blame. Validation errors keep the existing `errors: [{ field, message }]` list as well.
 - Codes: `400 INVALID_INPUT`, `401 UNAUTHENTICATED`, `403 FORBIDDEN`, `404 NOT_FOUND`, `409 STAY_UNAVAILABLE`, `409 CALENDAR_CONFLICT`, `409 ROOM_IDS_REQUIRED`, `429 RATE_LIMITED`, `5xx INTERNAL_ERROR`. A database failure is a `500`, never an empty result. `403` does not occur today because there is a single admin role.
-- Services throw the 409 errors with an explicit `code`. An `AvailabilityExceptionFilter`, applied with `@UseFilters` to the calendar controller and to the `search`, `stay-quote` and `update` handlers, adds `code` (from the status) and `field` (from the first validation error) when they are missing. The filter is additive: it keeps existing fields and leaves other routes untouched. Method- and controller-scoped filters also receive exceptions thrown by the global guards (`AuthGuard` 401, `ThrottlerGuard` 429).
+- Services throw the 409 errors with an explicit `code`. An `AvailabilityExceptionFilter`, applied with `@UseFilters` to the calendar controller and to the `search`, `stay-quote` and `update` handlers, adds `code` (from the status) and `field` (from the first validation error) when they are missing. It also replaces the English messages of 401, 403, 429 and 5xx errors with Arabic ones. Otherwise it keeps existing fields and leaves other routes untouched. Method- and controller-scoped filters also receive exceptions thrown by the global guards (`AuthGuard` 401, `ThrottlerGuard` 429).
 
 ## 9. Module layout
 
@@ -411,7 +412,7 @@ src/modules/hotel-availability/
 
 ## 11. Testing
 
-1. **Engine unit tests (Jest).** Add a `moduleNameMapper` for `src/...` to the Jest config. Cover:
+1. **Engine unit tests (Jest).** Engine files import only each other and never Prisma, so Jest runs them without config changes. Cover:
    - dates: Cairo today across the UTC day boundary, invalid dates, night lists;
    - money parsing and formatting;
    - pricing: override vs base, an EGP-only override, `null` vs `0`, a non-positive base;
@@ -419,7 +420,7 @@ src/modules/hotel-availability/
 2. **Live HTTP verification on `oday_tourism_dev`.**
    - `prisma/seed-hotel-availability.ts` (npm script `seed:availability`) idempotently creates a test hotel, slug `availability-test-hotel`, in `SHARM_EL_SHEIKH`, with dates relative to today in Cairo. It has a two-person and a three-person room, a room without an EGP base rate, a priced upgrade, an open range, a closed night, and overrides in both currencies.
    - Every endpoint is then exercised over HTTP: the acceptance table, `401` without a token, `400` validation, `409` conflicts, `by_id` edits and `ROOM_IDS_REQUIRED`, and the unchanged legacy catalog.
-   - The same script can prepare a staging test hotel. It must never be run against production.
+   - The script refuses any database host other than localhost.
 3. `npm run build`, and lint on the changed files.
 
 Acceptance cases from the handoff:
