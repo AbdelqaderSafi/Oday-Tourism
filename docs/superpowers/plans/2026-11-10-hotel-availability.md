@@ -1809,7 +1809,7 @@ git commit -m "feat(hotel): keep room ids with rooms_write_mode=by_id and block 
 
 **Produces:** `GET`/`PATCH /hotel/:hotelId/rooms/:roomId/calendar`; `HotelAvailabilityModule` (imported by `HotelModule`); `UUID_PATTERN`, `dateField` and calendar schemas; `loadRoomNights`, `baseRates`, `toRoomStock`, `STOCK_ROOM_SELECT`, `ELIGIBLE_ROOM_WHERE`, `StockRoom`, `RoomNights`; calendar DTO types.
 
-- [ ] **Step 1: Validation (`util/availability.validation.ts`)**
+- [x] **Step 1: Validation (`util/availability.validation.ts`)**
 
 ```ts
 import { z } from 'zod';
@@ -1885,7 +1885,7 @@ export const calendarUpdateBodySchema = z
   });
 ```
 
-- [ ] **Step 2: DTOs (`types/availability.dto.ts`)**
+- [x] **Step 2: DTOs (`types/availability.dto.ts`)**
 
 ```ts
 import type { z } from 'zod';
@@ -1909,7 +1909,7 @@ export type RoomCalendarResponse = {
 export type RoomCalendarUpdateResponse = { hotel_id: string; room_id: string; revision: number };
 ```
 
-- [ ] **Step 3: Queries (`util/availability.queries.ts`)**
+- [x] **Step 3: Queries (`util/availability.queries.ts`)**
 
 ```ts
 import { Prisma } from 'generated/prisma/client';
@@ -1973,7 +1973,7 @@ export function toRoomStock(room: StockRoom, nights: RoomNights): RoomTypeStock 
 }
 ```
 
-- [ ] **Step 4: Service (`room-calendar.service.ts`)**
+- [x] **Step 4: Service (`room-calendar.service.ts`)**
 
 ```ts
 import { Injectable } from '@nestjs/common';
@@ -2060,7 +2060,7 @@ export class RoomCalendarService {
 }
 ```
 
-- [ ] **Step 5: Swagger (`swagger/availability.swagger.ts`)**
+- [x] **Step 5: Swagger (`swagger/availability.swagger.ts`)**
 
 ```ts
 import { applyDecorators } from '@nestjs/common';
@@ -2160,7 +2160,7 @@ export const UpdateRoomCalendarSwagger = () =>
   );
 ```
 
-- [ ] **Step 6: Controller and module.** `room-calendar.controller.ts`:
+- [x] **Step 6: Controller and module.** `room-calendar.controller.ts`:
 
 ```ts
 import { Body, Controller, Get, Header, Param, Patch, Query, UseFilters } from '@nestjs/common';
@@ -2219,9 +2219,9 @@ export class HotelAvailabilityModule {}
 
 In `src/modules/hotel/hotel.module.ts`, import `HotelAvailabilityModule` from `'../hotel-availability/hotel-availability.module'` and set `imports: [FileModule, HotelAvailabilityModule]`.
 
-- [ ] **Step 7: Build.** `npm run build`. Expected: exit 0. The watch server reloads.
+- [x] **Step 7: Build.** `npm run build`. Expected: exit 0. The watch server reloads.
 
-- [ ] **Step 8: Write `.tmp/availability-verify/calendar.mjs`**
+- [x] **Step 8: Write `.tmp/availability-verify/calendar.mjs`**
 
 ```js
 import { isDeepStrictEqual } from 'node:util';
@@ -2299,9 +2299,9 @@ export default async function calendar() {
 }
 ```
 
-- [ ] **Step 9: Run it.** `. .\.tmp\local-session.ps1; node .tmp/availability-verify/run.mjs calendar`. Expected: `29/29 passed`.
+- [x] **Step 9: Run it.** `. .\.tmp\local-session.ps1; node .tmp/availability-verify/run.mjs calendar`. Expected: `29/29 passed`.
 
-- [ ] **Step 10: Lint and commit**
+- [x] **Step 10: Lint and commit**
 
 ```powershell
 npx eslint --fix src/modules/hotel-availability src/modules/hotel/hotel.module.ts
