@@ -645,7 +645,7 @@ git commit -m "feat(availability): add nightly pricing and stay totals"
 
 **Produces (`engine/room-allocation.ts`):** `AllocationCandidate`, `RoomPick`, `Allocation`, `compareIds`, `compareRoomPicks`, `chooseAllocation`, `isSelectionFeasible`. `RoomStayTerms` structurally satisfies `AllocationCandidate`.
 
-- [ ] **Step 1: Write the failing test** `engine/room-allocation.spec.ts`:
+- [x] **Step 1: Write the failing test** `engine/room-allocation.spec.ts`:
 
 ```ts
 import { Allocation, AllocationCandidate, chooseAllocation, compareIds, compareRoomPicks, isSelectionFeasible, RoomPick } from './room-allocation';
@@ -768,9 +768,9 @@ describe('isSelectionFeasible', () => {
 });
 ```
 
-- [ ] **Step 2: Run it to confirm it fails.** `npx jest src/modules/hotel-availability/engine/room-allocation`. Expected: FAIL (`chooseAllocation` is not exported).
+- [x] **Step 2: Run it to confirm it fails.** `npx jest src/modules/hotel-availability/engine/room-allocation`. Expected: FAIL (`chooseAllocation` is not exported).
 
-- [ ] **Step 3: Implement.** Replace `engine/room-allocation.ts` with:
+- [x] **Step 3: Implement.** Replace `engine/room-allocation.ts` with:
 
 ```ts
 import type { Cents } from './money';
@@ -868,9 +868,9 @@ export function isSelectionFeasible(rooms: RoomPick[], candidates: AllocationCan
 }
 ```
 
-- [ ] **Step 4: Run all engine tests.** `npx jest src/modules/hotel-availability/engine`. Expected: `Tests: 26 passed`.
+- [x] **Step 4: Run all engine tests.** `npx jest src/modules/hotel-availability/engine`. Expected: `Tests: 26 passed`.
 
-- [ ] **Step 5: Lint and commit**
+- [x] **Step 5: Lint and commit**
 
 ```powershell
 npx eslint --fix src/modules/hotel-availability/engine
