@@ -1473,7 +1473,7 @@ git commit -m "feat(rooms): accept room capacity in hotel and room writes"
 
 **Produces:** `rooms_write_mode=by_id` and `delete_room_ids`; soft-deleting legacy replacement; `409 ROOM_IDS_REQUIRED`; `HOTEL_CATALOG_INCLUDE` and `HotelCatalogEntry` in `src/modules/hotel/util/hotel-catalog.ts`; `AvailabilityExceptionFilter` on hotel `update`.
 
-- [ ] **Step 1: Create `src/modules/hotel/util/hotel-catalog.ts`**
+- [x] **Step 1: Create `src/modules/hotel/util/hotel-catalog.ts`**
 
 ```ts
 import { Prisma } from 'generated/prisma/client';
@@ -1488,7 +1488,7 @@ export const HOTEL_CATALOG_INCLUDE = {
 export type HotelCatalogEntry = Prisma.hotelsGetPayload<{ include: typeof HOTEL_CATALOG_INCLUDE }>;
 ```
 
-- [ ] **Step 2: DTOs.** In `src/modules/hotel/types/hotel.dto.ts`, add after `RoomInput`:
+- [x] **Step 2: DTOs.** In `src/modules/hotel/types/hotel.dto.ts`, add after `RoomInput`:
 
 ```ts
 export type RoomUpdateInput = {
@@ -1511,7 +1511,7 @@ export type UpdateHotelRequest = Omit<UpdateHotelDto, 'rooms'> & {
 };
 ```
 
-- [ ] **Step 3: Validation (`src/modules/hotel/util/hotel.validation.ts`).** Move the `uuidLike` block (its two comment lines and the declaration) to just below the imports, because the new row schema uses it. Replace `roomInputSchema` with:
+- [x] **Step 3: Validation (`src/modules/hotel/util/hotel.validation.ts`).** Move the `uuidLike` block (its two comment lines and the declaration) to just below the imports, because the new row schema uses it. Replace `roomInputSchema` with:
 
 ```ts
 const roomTranslationsSchema = z
@@ -1612,7 +1612,7 @@ Replace the closing `});` of that schema with:
 
 `POST /hotel` keeps `roomsField`. Object-level `.transform` only runs once every field is valid.
 
-- [ ] **Step 4: Service (`src/modules/hotel/hotel.service.ts`).**
+- [x] **Step 4: Service (`src/modules/hotel/hotel.service.ts`).**
   - Imports: import `RoomInput` and `RoomUpdateInput` with the existing DTOs; add `import { HOTEL_CATALOG_INCLUDE } from './util/hotel-catalog';` and `import { invalidInput, roomIdsRequired } from '../hotel-availability/util/availability.errors';`. Below the imports add:
 
 ```ts
@@ -1700,7 +1700,7 @@ const isExistingRoom = (row: RoomInput | RoomUpdateInput): row is RoomUpdateInpu
   }
 ```
 
-- [ ] **Step 5: Controller and Swagger.** In `hotel.controller.ts`, import `UseFilters` from `@nestjs/common` and `AvailabilityExceptionFilter` from `'../hotel-availability/util/availability-exception.filter'`; add `@UseFilters(AvailabilityExceptionFilter)` above `@UpdateHotelSwagger()`. In `UpdateHotelSwagger`, replace the `rooms` property and add two properties before `addons`:
+- [x] **Step 5: Controller and Swagger.** In `hotel.controller.ts`, import `UseFilters` from `@nestjs/common` and `AvailabilityExceptionFilter` from `'../hotel-availability/util/availability-exception.filter'`; add `@UseFilters(AvailabilityExceptionFilter)` above `@UpdateHotelSwagger()`. In `UpdateHotelSwagger`, replace the `rooms` property and add two properties before `addons`:
 
 ```ts
           rooms_write_mode: {
@@ -1725,9 +1725,9 @@ const isExistingRoom = (row: RoomInput | RoomUpdateInput): row is RoomUpdateInpu
 
 Add `ApiResponse({ status: 409, description: 'ROOM_IDS_REQUIRED: استبدال الغرف بدون by_id لفندق يستخدم التقويم' }),` before the 404 response.
 
-- [ ] **Step 6: Build.** `npm run build`. Expected: exit 0.
+- [x] **Step 6: Build.** `npm run build`. Expected: exit 0.
 
-- [ ] **Step 7: Write `.tmp/availability-verify/rooms.mjs`**
+- [x] **Step 7: Write `.tmp/availability-verify/rooms.mjs`**
 
 ```js
 import { IDS, check, checkError, reseed, send } from './harness.mjs';
@@ -1793,9 +1793,9 @@ export default async function rooms() {
 }
 ```
 
-- [ ] **Step 8: Run `rooms` and recheck `capacity`.** `. .\.tmp\local-session.ps1; node .tmp/availability-verify/run.mjs capacity rooms`. Expected: `36/36 passed`.
+- [x] **Step 8: Run `rooms` and recheck `capacity`.** `. .\.tmp\local-session.ps1; node .tmp/availability-verify/run.mjs capacity rooms`. Expected: `36/36 passed`.
 
-- [ ] **Step 9: Lint and commit**
+- [x] **Step 9: Lint and commit**
 
 ```powershell
 npx eslint --fix src/modules/hotel/util/hotel-catalog.ts src/modules/hotel/types/hotel.dto.ts src/modules/hotel/util/hotel.validation.ts src/modules/hotel/hotel.service.ts src/modules/hotel/hotel.controller.ts src/modules/hotel/swagger/hotel.swagger.ts

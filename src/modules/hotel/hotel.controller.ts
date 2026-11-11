@@ -9,7 +9,9 @@ import {
   UploadedFiles,
   Query,
   Patch,
+  UseFilters,
 } from '@nestjs/common';
+import { AvailabilityExceptionFilter } from '../hotel-availability/util/availability-exception.filter';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { IsPublic } from 'src/decorators/public.decorator';
 import { HotelService } from './hotel.service';
@@ -86,6 +88,7 @@ export class HotelController {
     ]),
     FileCleanupInterceptor,
   )
+  @UseFilters(AvailabilityExceptionFilter)
   @UpdateHotelSwagger()
   update(
     @Param('id') id: string,
