@@ -17,6 +17,7 @@ export type TranslationInput = {
 export type RoomInput = {
   price: Prisma.Decimal;
   price_egp: Prisma.Decimal;
+  capacity?: number | null;
   translations: {
     language: LanguageEnum;
     name: string;

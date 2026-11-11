@@ -1367,7 +1367,7 @@ git commit -m "chore(availability): add local-only availability fixtures"
 
 **Produces:** `capacityField` and `MAX_ROOM_CAPACITY` in `src/modules/utils/capacity.util.ts`; `capacity` accepted by `POST /hotel` rows, legacy `PATCH /hotel/:id` rows, and `POST`/`PATCH /hotel/:hotelId/room`.
 
-- [ ] **Step 1: Create `src/modules/utils/capacity.util.ts`**
+- [x] **Step 1: Create `src/modules/utils/capacity.util.ts`**
 
 ```ts
 import { z } from 'zod';
@@ -1388,7 +1388,7 @@ export const capacityField = z.unknown().transform((value, ctx): number | null =
 });
 ```
 
-- [ ] **Step 2: Room module.** In `src/modules/room/util/room.validation.ts`, add `import { capacityField } from 'src/modules/utils/capacity.util';` and add `capacity: capacityField.optional(),` after `price_egp` in both `createRoomValidationSchema` and `updateRoomValidationSchema`. In `src/modules/room/types/room.dto.ts`, add `capacity?: number | null;` after `price_egp` in `CreateRoomDto`. `RoomService` needs no change: it spreads the remaining fields into `data`.
+- [x] **Step 2: Room module.** In `src/modules/room/util/room.validation.ts`, add `import { capacityField } from 'src/modules/utils/capacity.util';` and add `capacity: capacityField.optional(),` after `price_egp` in both `createRoomValidationSchema` and `updateRoomValidationSchema`. In `src/modules/room/types/room.dto.ts`, add `capacity?: number | null;` after `price_egp` in `CreateRoomDto`. `RoomService` needs no change: it spreads the remaining fields into `data`.
 
 In `src/modules/room/swagger/room.swagger.ts`, add this property after `price_egp` in both the create and update `ApiBody` schemas:
 
@@ -1404,7 +1404,7 @@ In `src/modules/room/swagger/room.swagger.ts`, add this property after `price_eg
           },
 ```
 
-- [ ] **Step 3: Hotel rows.** In `src/modules/hotel/util/hotel.validation.ts`, add `import { capacityField } from 'src/modules/utils/capacity.util';` and in `roomInputSchema` add `capacity: capacityField.optional(),` after `price_egp: priceField,`. In `src/modules/hotel/types/hotel.dto.ts` add `capacity?: number | null;` after `price_egp` in `RoomInput`. In `src/modules/hotel/swagger/hotel.swagger.ts`, `CreateHotelSwagger` `rooms` property, replace the example and description with:
+- [x] **Step 3: Hotel rows.** In `src/modules/hotel/util/hotel.validation.ts`, add `import { capacityField } from 'src/modules/utils/capacity.util';` and in `roomInputSchema` add `capacity: capacityField.optional(),` after `price_egp: priceField,`. In `src/modules/hotel/types/hotel.dto.ts` add `capacity?: number | null;` after `price_egp` in `RoomInput`. In `src/modules/hotel/swagger/hotel.swagger.ts`, `CreateHotelSwagger` `rooms` property, replace the example and description with:
 
 ```ts
             example:
@@ -1413,11 +1413,11 @@ In `src/modules/room/swagger/room.swagger.ts`, add this property after `price_eg
               'JSON string - مصفوفة الغرف (اختياري). كل غرفة تحتوي: price, price_egp, capacity (عدد الضيوف لكل وحدة 1-50، اختياري), translations[]',
 ```
 
-- [ ] **Step 4: Build.** `npm run build`. Expected: exit 0.
+- [x] **Step 4: Build.** `npm run build`. Expected: exit 0.
 
-- [ ] **Step 5: Start the local server.** In the background run `powershell -NoProfile -ExecutionPolicy Bypass -File .\.tmp\start-local-server.ps1`, and wait for `Nest application successfully started`. Watch mode keeps it current for later tasks; reuse it if it is still running.
+- [x] **Step 5: Start the local server.** In the background run `powershell -NoProfile -ExecutionPolicy Bypass -File .\.tmp\start-local-server.ps1`, and wait for `Nest application successfully started`. Watch mode keeps it current for later tasks; reuse it if it is still running.
 
-- [ ] **Step 6: Write `.tmp/availability-verify/capacity.mjs`**
+- [x] **Step 6: Write `.tmp/availability-verify/capacity.mjs`**
 
 ```js
 import { IDS, check, reseed, send } from './harness.mjs';
@@ -1457,9 +1457,9 @@ export default async function capacity() {
 }
 ```
 
-- [ ] **Step 7: Run it.** `. .\.tmp\local-session.ps1; node .tmp/availability-verify/run.mjs capacity`. Expected: `12/12 passed`. On a failure, fix the code and rerun.
+- [x] **Step 7: Run it.** `. .\.tmp\local-session.ps1; node .tmp/availability-verify/run.mjs capacity`. Expected: `12/12 passed`. On a failure, fix the code and rerun.
 
-- [ ] **Step 8: Lint and commit**
+- [x] **Step 8: Lint and commit**
 
 ```powershell
 npx eslint --fix src/modules/utils/capacity.util.ts src/modules/room/util/room.validation.ts src/modules/room/types/room.dto.ts src/modules/room/swagger/room.swagger.ts src/modules/hotel/util/hotel.validation.ts src/modules/hotel/types/hotel.dto.ts src/modules/hotel/swagger/hotel.swagger.ts

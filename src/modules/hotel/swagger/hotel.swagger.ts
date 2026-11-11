@@ -135,9 +135,9 @@ export const CreateHotelSwagger = () =>
           rooms: {
             type: 'string',
             example:
-              '[{"price":150,"price_egp":1500,"translations":[{"language":"ar","name":"غرفة ديلوكس","description":"غرفة فاخرة مع إطلالة على البحر"},{"language":"en","name":"Deluxe Room","description":"Luxury room with sea view"}]}]',
+              '[{"price":150,"price_egp":1500,"capacity":2,"translations":[{"language":"ar","name":"غرفة ديلوكس","description":"غرفة فاخرة مع إطلالة على البحر"},{"language":"en","name":"Deluxe Room","description":"Luxury room with sea view"}]}]',
             description:
-              'JSON string - مصفوفة الغرف (اختياري). كل غرفة تحتوي: price, price_egp, translations[]',
+              'JSON string - مصفوفة الغرف (اختياري). كل غرفة تحتوي: price, price_egp, capacity (عدد الضيوف لكل وحدة 1-50، اختياري), translations[]',
           },
           addons: {
             type: 'string',

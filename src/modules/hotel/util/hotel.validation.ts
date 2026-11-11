@@ -7,6 +7,7 @@ import {
   nullablePriceField,
   priceField,
 } from 'src/modules/utils/price.util';
+import { capacityField } from 'src/modules/utils/capacity.util';
 
 const translationSchema = z.object({
   language: z.enum(['ar', 'en']),
@@ -24,6 +25,7 @@ const translationsField = z
 const roomInputSchema = z.object({
   price: priceField,
   price_egp: priceField,
+  capacity: capacityField.optional(),
   translations: z
     .array(
       z.object({
