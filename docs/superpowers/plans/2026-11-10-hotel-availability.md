@@ -2891,18 +2891,18 @@ git commit -m "feat(availability): add dated hotel search and stay quotes"
 
 ## Task 13: Full verification
 
-- [ ] **Step 1: Unit tests.** `npx jest src/modules/hotel-availability`. Expected: `Tests: 31 passed`.
-- [ ] **Step 2: Build.** `npm run build`. Expected: exit 0.
-- [ ] **Step 3: Lint every changed file.** Run `git diff --name-only main...HEAD -- '*.ts'`, then `npx eslint` on those files without `--fix`. Expected: 0 errors.
-- [ ] **Step 4: Live matrix.** With the server running: `. .\.tmp\local-session.ps1; node .tmp/availability-verify/run.mjs all`. Expected: all 108 cases pass. Fix any failure in the code (or the case, if the case itself is wrong), rerun, and never report a red case as known.
-- [ ] **Step 5: Report** (Arabic, per the `test-endpoints` skill): paste the printed table and `N/N passed`. Note what was skipped and why: `POST /hotel` with images (would upload to the real ImageKit account; its room-row schema is exercised through legacy `PATCH` rows), and the 500 path (covered by the filter unit test).
-- [ ] **Step 6: Stop the background server** started in Task 8, and check `git status` is clean apart from the gitignored files.
+- [x] **Step 1: Unit tests.** `npx jest src/modules/hotel-availability`. Expected: `Tests: 31 passed`.
+- [x] **Step 2: Build.** `npm run build`. Expected: exit 0.
+- [x] **Step 3: Lint every changed file.** Run `git diff --name-only main...HEAD -- '*.ts'`, then `npx eslint` on those files without `--fix`. Expected: 0 errors.
+- [x] **Step 4: Live matrix.** With the server running: `. .\.tmp\local-session.ps1; node .tmp/availability-verify/run.mjs all`. Expected: all 108 cases pass. Fix any failure in the code (or the case, if the case itself is wrong), rerun, and never report a red case as known.
+- [x] **Step 5: Report** (Arabic, per the `test-endpoints` skill): paste the printed table and `N/N passed`. Note what was skipped and why: `POST /hotel` with images (would upload to the real ImageKit account; its room-row schema is exercised through legacy `PATCH` rows), and the 500 path (covered by the filter unit test).
+- [x] **Step 6: Stop the background server** started in Task 8, and check `git status` is clean apart from the gitignored files.
 
 ---
 
 ## Task 14: Pre-merge checks and frontend handoff
 
-- [ ] **Step 1: Ask the owner's permission** for a read-only production check. Only with a yes, run against `.env`'s URL without printing it. Parse it as in `local-session.ps1` but skip the host guard, and use only these `SELECT`s:
+- [x] **Step 1: Ask the owner's permission** for a read-only production check. Only with a yes, run against `.env`'s URL without printing it. Parse it as in `local-session.ps1` but skip the host guard, and use only these `SELECT`s:
 
 ```sql
 SELECT COLUMN_NAME, COLUMN_TYPE, IS_NULLABLE, COLLATION_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'room' ORDER BY ORDINAL_POSITION;
@@ -2911,5 +2911,5 @@ SELECT migration_name, finished_at, rolled_back_at FROM _prisma_migrations ORDER
 
 Record whether `room.capacity` exists, that `room.id` uses `utf8mb4_unicode_ci`, and that no migration is unfinished. The migration handles both capacity cases.
 
-- [ ] **Step 2: Draft the frontend message (English)** for the user to send after deploy. Include: the new routes, the limits table (spec section 10), example responses from the local run, and the seven questions in spec section 13. Also cover how to get test data in production: an admin sets room capacities, then writes a calendar.
-- [ ] **Step 3: Hand over.** Tell the user the branch is ready, list the commits, and suggest `/ready-for-leader` before they push. Do not push.
+- [x] **Step 2: Draft the frontend message (English)** for the user to send after deploy. Include: the new routes, the limits table (spec section 10), example responses from the local run, and the seven questions in spec section 13. Also cover how to get test data in production: an admin sets room capacities, then writes a calendar.
+- [x] **Step 3: Hand over.** Tell the user the branch is ready, list the commits, and suggest `/ready-for-leader` before they push. Do not push.
