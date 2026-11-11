@@ -1064,7 +1064,7 @@ git commit -m "feat(availability): add error codes and the availability exceptio
 
 Upgrade `cccccccc-0000-4000-8000-000000000001`: USD 20, EGP 900. Managed hotel `aaaaaaaa-0000-4000-8000-000000000001` (`availability-test-hotel`, `calendar_managed_at` set); legacy hotel `…0002` (`availability-legacy-hotel`). Both are in `SHARM_EL_SHEIKH`.
 
-- [ ] **Step 1: Create `prisma/seed-hotel-availability.ts`**
+- [x] **Step 1: Create `prisma/seed-hotel-availability.ts`**
 
 ```ts
 import 'dotenv/config';
@@ -1217,13 +1217,13 @@ main()
   .finally(() => prisma.$disconnect());
 ```
 
-- [ ] **Step 2: Add the npm script.** In `package.json` `scripts`, after `"seed": "tsx prisma/seed.ts",` add:
+- [x] **Step 2: Add the npm script.** In `package.json` `scripts`, after `"seed": "tsx prisma/seed.ts",` add:
 
 ```json
     "seed:availability": "tsx prisma/seed-hotel-availability.ts",
 ```
 
-- [ ] **Step 3: Run the seed twice (idempotency) and check the refusal**
+- [x] **Step 3: Run the seed twice (idempotency) and check the refusal**
 
 ```powershell
 . .\.tmp\local-session.ps1
@@ -1235,7 +1235,7 @@ $saved = $env:DATABASE_URL; $env:DATABASE_URL = 'mysql://x:y@example.com:3306/ra
 
 Expected: both runs print `Availability fixtures ready…`; counts are `rooms 4` and `nights 10`; the last run fails with `Refusing to write availability fixtures to example.com`.
 
-- [ ] **Step 4: Create `.tmp/availability-verify/harness.mjs`** (not committed)
+- [x] **Step 4: Create `.tmp/availability-verify/harness.mjs`** (not committed)
 
 ```js
 import 'dotenv/config';
@@ -1352,7 +1352,7 @@ report();
 
 Every section file reseeds first, so sections are independent. The `prepare()` slug check stops the run before any write if port 3000 is served by anything other than the local database.
 
-- [ ] **Step 5: Build and commit**
+- [x] **Step 5: Build and commit**
 
 Run `npm run build`. Expected: exit 0.
 
