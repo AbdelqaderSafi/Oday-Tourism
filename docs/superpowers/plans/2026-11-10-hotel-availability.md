@@ -884,7 +884,7 @@ git commit -m "feat(availability): add room allocation with brute-force-checked 
 
 **Produces:** `util/availability.errors.ts` (`invalidInput`, `notFound`, `stayUnavailable`, `calendarConflict`, `roomIdsRequired`); `util/availability-exception.filter.ts` (`AvailabilityExceptionFilter`, `toErrorBody`).
 
-- [ ] **Step 1: Write the failing test** `util/availability-exception.filter.spec.ts`:
+- [x] **Step 1: Write the failing test** `util/availability-exception.filter.spec.ts`:
 
 ```ts
 import { ArgumentsHost, BadRequestException, NotFoundException, UnauthorizedException } from '@nestjs/common';
@@ -941,9 +941,9 @@ describe('AvailabilityExceptionFilter', () => {
 });
 ```
 
-- [ ] **Step 2: Run it to confirm it fails.** `npx jest src/modules/hotel-availability/util`. Expected: FAIL, missing modules.
+- [x] **Step 2: Run it to confirm it fails.** `npx jest src/modules/hotel-availability/util`. Expected: FAIL, missing modules.
 
-- [ ] **Step 3: Implement** `util/availability.errors.ts`:
+- [x] **Step 3: Implement** `util/availability.errors.ts`:
 
 ```ts
 import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
@@ -1039,9 +1039,9 @@ export class AvailabilityExceptionFilter implements ExceptionFilter {
 }
 ```
 
-- [ ] **Step 4: Run the tests.** `npx jest src/modules/hotel-availability`. Expected: `Tests: 31 passed`.
+- [x] **Step 4: Run the tests.** `npx jest src/modules/hotel-availability`. Expected: `Tests: 31 passed`.
 
-- [ ] **Step 5: Lint and commit**
+- [x] **Step 5: Lint and commit**
 
 ```powershell
 npx eslint --fix src/modules/hotel-availability/util
