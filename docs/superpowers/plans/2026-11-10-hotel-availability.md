@@ -2852,7 +2852,7 @@ git commit -m "feat(availability): add dated hotel search and stay quotes"
 
 ## Task 12: README
 
-- [ ] **Step 1: Edit `README.md`.**
+- [x] **Step 1: Edit `README.md`.**
   - In the project tree, add `│   ├── seed-hotel-availability.ts # Local-only availability fixtures` under `seed.ts`, and `│       ├── hotel-availability/ # Dated search, stay quotes, room calendar` under `addon/`.
   - In the Hotels table, add these rows and change the `PATCH /hotel/:id` description to `Update hotel (\`rooms_write_mode=by_id\` keeps room IDs)`:
 
@@ -2885,7 +2885,7 @@ git commit -m "feat(availability): add dated hotel search and stay quotes"
   - In Seeding, add: ``For local availability testing, `npm run seed:availability` resets two fixture hotels in `SHARM_EL_SHEIKH` with calendar data relative to today in Cairo. It refuses any database host other than localhost.``
   - In Available Scripts, add `| \`npm run seed:availability\` | Reset local availability fixtures (local databases only) |` after `npm run seed`.
 
-- [ ] **Step 2: Commit.** `git add README.md; git commit -m "docs: document hotel availability, room calendar and stable room ids"`
+- [x] **Step 2: Commit.** `git add README.md; git commit -m "docs: document hotel availability, room calendar and stable room ids"`
 
 ---
 

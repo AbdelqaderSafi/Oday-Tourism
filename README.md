@@ -76,6 +76,7 @@ oday-tourism/
 ├── prisma/
 │   ├── schema.prisma          # Database schema & Prisma models
 │   ├── seed.ts                # Database seeder (admin bootstrap)
+│   ├── seed-hotel-availability.ts # Local-only availability fixtures
 │   └── migrations/            # SQL migration history
 ├── generated/
 │   └── prisma/                # Generated Prisma client output
@@ -93,6 +94,7 @@ oday-tourism/
 │       ├── hotel/             # Hotel CRUD + translations
 │       ├── room/              # Rooms nested under hotels
 │       ├── addon/             # Add-ons nested under hotels
+│       ├── hotel-availability/ # Dated search, stay quotes, room calendar
 │       ├── trip/              # Trip packages CRUD + translations
 │       ├── destination/       # Destination images shared by hotels & trips
 │       ├── offer/             # Promotional offers
@@ -126,8 +128,10 @@ Interactive documentation is available at `/api/docs`.
 |---|---|---|
 | `POST` | `/hotel` | Create a new hotel |
 | `GET` | `/hotel` | List all hotels (paginated) |
+| `GET` | `/hotel/search` | Dated availability search (public) |
 | `GET` | `/hotel/:id` | Get hotel by ID |
-| `PATCH` | `/hotel/:id` | Update hotel |
+| `POST` | `/hotel/:hotelId/stay-quote` | Price a stay: recommendation or exact rooms and upgrades (public) |
+| `PATCH` | `/hotel/:id` | Update hotel (`rooms_write_mode=by_id` keeps room IDs) |
 | `DELETE` | `/hotel/:id` | Delete hotel |
 
 #### Rooms *(nested under hotel)*
@@ -149,6 +153,22 @@ Interactive documentation is available at `/api/docs`.
 | `GET` | `/hotel/:hotelId/addon/:id` | Get add-on by ID |
 | `PATCH` | `/hotel/:hotelId/addon/:id` | Update add-on |
 | `DELETE` | `/hotel/:hotelId/addon/:id` | Delete add-on |
+
+#### Room calendar *(admin, nested under hotel)*
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/hotel/:hotelId/rooms/:roomId/calendar?from=&to=` | Nightly units, rate overrides, base rates and revision (`to` exclusive, up to 365 nights) |
+| `PATCH` | `/hotel/:hotelId/rooms/:roomId/calendar` | Atomic batch of changes guarded by `revision` (a stale revision returns `409 CALENDAR_CONFLICT`) |
+
+#### Hotel availability rules
+
+- **Tariff:** `visitor_category=egyptian-resident` prices in EGP and `other` in USD, with no conversion.
+- **Stay:** `check_in` today or later (Africa/Cairo), 1–30 nights, `check_out` within 365 days; adults ≥ 1 and at most 20 guests.
+- **Stock:** a room type is offered when it has a `capacity` (1–50) and at least one unit on every night; nights without a calendar row are closed. The nightly rate is that night's override, else the room's base price if above zero, else on request.
+- **Recommendation:** the cheapest fully priced combination, then fewer rooms, then the lowest room IDs; otherwise the fewest rooms on request (`pricing_status: ON_REQUEST`, `total: null`).
+- **Room IDs:** `PATCH /hotel/:id` with `rooms_write_mode=by_id` updates rows that have an `id`, creates rows without one, and archives `delete_room_ids`. Once a hotel has a calendar write, replacing rooms without `by_id` returns `409 ROOM_IDS_REQUIRED`.
+- **Errors** on these routes have the shape `{ statusCode, code, message, field?, errors? }`, with codes `INVALID_INPUT`, `UNAUTHENTICATED`, `NOT_FOUND`, `STAY_UNAVAILABLE`, `CALENDAR_CONFLICT`, `ROOM_IDS_REQUIRED`, `RATE_LIMITED` and `INTERNAL_ERROR`.
 
 ---
 
@@ -270,7 +290,7 @@ Key entities and their relationships:
 ```
 Admin
 Hotel ──── HotelTranslation
-       ├── Room
+       ├── Room ──── RoomCalendarDay (nightly units and rate overrides)
        ├── HotelAddon
        └── Asset (images)
 
@@ -391,6 +411,8 @@ npm run seed
 
 > The admin is also bootstrapped automatically on application startup via `AdminService` if no admin exists.
 
+For local availability testing, `npm run seed:availability` resets two fixture hotels in `SHARM_EL_SHEIKH` with calendar data relative to today in Cairo. It refuses any database host other than localhost.
+
 ---
 
 ## API Documentation
@@ -415,6 +437,7 @@ It documents all endpoints with request/response schemas, authentication require
 | `npm run start:prod` | Start the compiled production build |
 | `npm run build` | Generate Prisma client and compile TypeScript |
 | `npm run seed` | Seed the database with default data |
+| `npm run seed:availability` | Reset local availability fixtures (local databases only) |
 | `npm run format` | Format source code with Prettier |
 | `npm run lint` | Lint and auto-fix with ESLint |
 | `npm run test` | Run unit tests |
