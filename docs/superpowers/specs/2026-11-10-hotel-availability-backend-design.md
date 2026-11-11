@@ -72,7 +72,7 @@ model RoomCalendarDay {
 
 One migration, `prisma/migrations/20261110120000_add_hotel_availability/migration.sql`, written by hand like the existing idempotent migrations:
 
-1. A stored procedure, following `20260413000000_add_city_to_trips_fix_comments`, checks `information_schema.COLUMNS` for a legacy `room.capacity`. If the column exists, it runs `ALTER TABLE room MODIFY COLUMN capacity VARCHAR(50) NULL` so inserts that omit it succeed. No data is dropped.
+1. A prepared statement (`SET @sql = IF(EXISTS(...), ...)`, then `PREPARE` / `EXECUTE`) checks `information_schema.COLUMNS` for a legacy `room.capacity`. If the column exists, it runs `ALTER TABLE room MODIFY COLUMN capacity VARCHAR(50) NULL` so inserts that omit it succeed; otherwise it runs `SELECT 1`. No data is dropped. It replaced a stored procedure during the pre-push review: no earlier migration creates a routine, the Railway user's `CREATE ROUTINE` privilege was never checked, and the container runs `prisma migrate deploy` before it starts the API, so a failed migration would keep the API down. Production has no legacy `capacity` column (read-only check on 2026-11-11); both branches were rehearsed locally.
 2. Additive DDL: `room.guest_capacity`, `room.calendar_revision`, `hotels.calendar_managed_at`, and the `room_calendar_days` table (`utf8mb4_unicode_ci`, like the existing tables) with a foreign key to `room(id)`.
 
 After applying it to `oday_tourism_dev`, `prisma migrate diff` from that database to `schema.prisma` must show nothing for the new columns and table. It will still report the pre-existing legacy drift (the old `capacity` column), so any SQL that Prisma generates must be reviewed instead of applied as is.

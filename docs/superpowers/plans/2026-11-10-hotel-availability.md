@@ -163,21 +163,21 @@ Run `npx prisma format; npx prisma validate`. Expected: `The schema at prisma\sc
 -- Hotel availability: room capacity, calendar revisions and the nightly room calendar.
 
 -- Databases built from the init migration have `room`.`capacity` VARCHAR(50) NOT NULL, which the schema no longer
--- has; inserts that omit it fail in strict mode. Production may or may not still have the column.
-DROP PROCEDURE IF EXISTS relax_legacy_room_capacity;
-CREATE PROCEDURE relax_legacy_room_capacity()
-BEGIN
-  IF EXISTS (
+-- has; inserts that omit it fail in strict mode. Production has no such column (checked 2026-11-11).
+-- A prepared statement instead of a stored procedure: it needs no CREATE ROUTINE privilege.
+SET @relax_legacy_room_capacity = IF(
+  EXISTS (
     SELECT 1 FROM information_schema.COLUMNS
     WHERE TABLE_SCHEMA = DATABASE()
       AND TABLE_NAME   = 'room'
       AND COLUMN_NAME  = 'capacity'
-  ) THEN
-    ALTER TABLE `room` MODIFY COLUMN `capacity` VARCHAR(50) NULL;
-  END IF;
-END;
-CALL relax_legacy_room_capacity();
-DROP PROCEDURE IF EXISTS relax_legacy_room_capacity;
+  ),
+  'ALTER TABLE `room` MODIFY COLUMN `capacity` VARCHAR(50) NULL',
+  'SELECT 1'
+);
+PREPARE relax_legacy_room_capacity FROM @relax_legacy_room_capacity;
+EXECUTE relax_legacy_room_capacity;
+DEALLOCATE PREPARE relax_legacy_room_capacity;
 
 -- AlterTable
 ALTER TABLE `room` ADD COLUMN `guest_capacity` TINYINT UNSIGNED NULL,
