@@ -108,6 +108,26 @@ describe('roomStayTerms', () => {
     ).toBe(0);
     expect(roomStayTerms(family, nights, 3, 'EGP').maxQuantity).toBe(1);
   });
+
+  it('never offers a room type without a verified capacity, however much stock it has', () => {
+    const stocked = new Map(nights.map((date) => [date, open(5)]));
+    expect(
+      roomStayTerms(
+        { ...double, capacity: 0, nights: stocked },
+        nights,
+        2,
+        'EGP',
+      ).maxQuantity,
+    ).toBe(0);
+    expect(
+      roomStayTerms(
+        { ...double, capacity: 1, nights: stocked },
+        nights,
+        2,
+        'EGP',
+      ).maxQuantity,
+    ).toBe(2);
+  });
 });
 
 describe('priceStay', () => {

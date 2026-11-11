@@ -75,7 +75,11 @@ export function roomStayTerms(
   return {
     roomId: room.roomId,
     capacity: room.capacity,
-    maxQuantity: nights.length ? Math.max(0, Math.min(fewestUnits, guests)) : 0,
+    // A type without a verified capacity is never offered, whatever its stock (spec 6.4).
+    maxQuantity:
+      nights.length && room.capacity >= 1
+        ? Math.max(0, Math.min(fewestUnits, guests))
+        : 0,
     unitStayTotal: sumOrNull(nightlyRates.map((night) => night.unitRate)),
     nightlyRates,
   };
