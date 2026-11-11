@@ -6,6 +6,7 @@ import {
   ApiQuery,
   ApiResponse,
 } from '@nestjs/swagger';
+import { DestinatiosnEnum } from 'generated/prisma/client';
 import { AVAILABILITY_LIMITS } from '../engine/availability-limits';
 
 const LIMITS = AVAILABILITY_LIMITS;
@@ -145,5 +146,136 @@ export const UpdateRoomCalendarSwagger = () =>
     ApiResponse({
       status: 409,
       description: 'CALENDAR_CONFLICT: التقويم تغيّر منذ آخر قراءة',
+    }),
+  );
+
+const VISITOR_CATEGORY_DOC = {
+  enum: ['egyptian-resident', 'other'],
+  description:
+    'egyptian-resident يسعّر بالجنيه المصري (EGP)، وother بالدولار (USD)، بلا تحويل بين العملتين',
+};
+
+const STAY_RULES = `check_in من اليوم (بتوقيت القاهرة)، من 1 إلى ${LIMITS.maxStayNights} ليلة، وcheck_out خلال ${LIMITS.bookingWindowDays} يومًا. adults ≥ 1، children ≥ 0، والإجمالي حتى ${LIMITS.maxGuests}.`;
+
+export const SearchHotelStaysSwagger = () =>
+  applyDecorators(
+    ApiOperation({
+      summary: 'البحث عن فنادق متاحة لتواريخ محددة',
+      description: `يرجع الفنادق التي يكفي مخزونها كل ليالي الإقامة مع أرخص توزيع غرف مقترح، مرتبة بمعرّف الفندق. ${STAY_RULES} pricing_status = ON_REQUEST وtotal = null إذا لم يتوفر سعر كامل.`,
+    }),
+    ApiQuery({
+      name: 'destination',
+      required: true,
+      enum: Object.values(DestinatiosnEnum),
+    }),
+    ApiQuery({ name: 'check_in', required: true, example: '2026-11-20' }),
+    ApiQuery({ name: 'check_out', required: true, example: '2026-11-22' }),
+    ApiQuery({ name: 'adults', required: true, type: Number, example: 4 }),
+    ApiQuery({ name: 'children', required: false, type: Number, example: 1 }),
+    ApiQuery({
+      name: 'visitor_category',
+      required: true,
+      ...VISITOR_CATEGORY_DOC,
+    }),
+    ApiQuery({ name: 'page', required: false, type: Number, example: 1 }),
+    ApiQuery({
+      name: 'limit',
+      required: false,
+      type: Number,
+      example: LIMITS.defaultSearchPageSize,
+      description: `حتى ${LIMITS.maxSearchPageSize}`,
+    }),
+    ApiResponse({
+      status: 200,
+      description: 'hotel بنفس شكل GET /hotel (مختصر هنا)',
+      schema: {
+        example: {
+          data: [
+            {
+              hotel: { id: HOTEL_ID, destination: 'SHARM_EL_SHEIKH' },
+              stay_offer: {
+                nights: 2,
+                currency: 'EGP',
+                pricing_status: 'PRICED',
+                total: '26400.00',
+                rooms: [
+                  { room_id: ROOM_ID, quantity: 1 },
+                  {
+                    room_id: 'c3d4e5f6-0a1b-4c2d-8e3f-4a5b6c7d8e9f',
+                    quantity: 1,
+                  },
+                ],
+              },
+            },
+          ],
+          meta: { total: 1, page: 1, limit: 20, totalPages: 1 },
+        },
+      },
+    }),
+    ApiResponse({ status: 400, description: `INVALID_INPUT. ${ERROR_SHAPE}` }),
+    ApiResponse({ status: 429, description: 'RATE_LIMITED' }),
+  );
+
+export const StayQuoteSwagger = () =>
+  applyDecorators(
+    ApiOperation({
+      summary: 'تسعير إقامة في فندق',
+      description: `بدون rooms: يرجع التوزيع المقترح والأنواع المتاحة. مع rooms: يتحقق من الاختيار المحدد ويسعّره مع الترقيات (سعر الترقية لكل غرفة لكل ليلة). ${STAY_RULES} لا يحجز أي شيء.`,
+    }),
+    ApiParam({ name: 'hotelId', description: 'معرّف الفندق (UUID)' }),
+    ApiBody({
+      schema: {
+        type: 'object',
+        required: ['check_in', 'check_out', 'adults', 'visitor_category'],
+        properties: {
+          check_in: { type: 'string', example: '2026-11-20' },
+          check_out: { type: 'string', example: '2026-11-22' },
+          adults: { type: 'integer', minimum: 1, example: 4 },
+          children: { type: 'integer', minimum: 0, example: 1 },
+          visitor_category: { type: 'string', ...VISITOR_CATEGORY_DOC },
+          rooms: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                room_id: { type: 'string' },
+                quantity: { type: 'integer', minimum: 1 },
+              },
+            },
+          },
+          addons: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                addon_id: { type: 'string' },
+                quantity: { type: 'integer', minimum: 1 },
+              },
+            },
+          },
+        },
+        example: {
+          check_in: '2026-11-20',
+          check_out: '2026-11-22',
+          adults: 4,
+          children: 1,
+          visitor_category: 'egyptian-resident',
+          rooms: [{ room_id: ROOM_ID, quantity: 1 }],
+          addons: [
+            { addon_id: 'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d', quantity: 1 },
+          ],
+        },
+      },
+    }),
+    ApiResponse({
+      status: 200,
+      description: 'التسعير الحالي؛ الأسعار والمخزون قد تتغير قبل الإرسال',
+    }),
+    ApiResponse({ status: 400, description: `INVALID_INPUT. ${ERROR_SHAPE}` }),
+    ApiResponse({ status: 404, description: 'NOT_FOUND: الفندق غير موجود' }),
+    ApiResponse({
+      status: 409,
+      description:
+        'STAY_UNAVAILABLE: لا يوجد توزيع يغطي الضيوف أو الاختيار لم يعد متاحًا',
     }),
   );

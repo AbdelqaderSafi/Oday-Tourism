@@ -2315,7 +2315,7 @@ git commit -m "feat(availability): add the admin room calendar API"
 
 **Produces:** `GET /hotel/search`, `POST /hotel/:hotelId/stay-quote`, `HotelAvailabilityService` (exported).
 
-- [ ] **Step 1: Validation.** In `util/availability.validation.ts`, add `import { DestinatiosnEnum } from 'generated/prisma/client';` and append:
+- [x] **Step 1: Validation.** In `util/availability.validation.ts`, add `import { DestinatiosnEnum } from 'generated/prisma/client';` and append:
 
 ```ts
 const idField = z.string().regex(UUID_PATTERN, 'معرّف غير صالح').toLowerCase();
@@ -2389,7 +2389,7 @@ export const stayQuoteBodySchema = z
   });
 ```
 
-- [ ] **Step 2: DTOs.** In `types/availability.dto.ts`, extend the imports (`Currency, VisitorCategory` from stay-pricing; `staySearchQuerySchema, stayQuoteBodySchema` from validation; `import type { HotelCatalogEntry } from 'src/modules/hotel/util/hotel-catalog';` and `import type { PaginatedResult } from 'src/types/util.types';`) and append:
+- [x] **Step 2: DTOs.** In `types/availability.dto.ts`, extend the imports (`Currency, VisitorCategory` from stay-pricing; `staySearchQuerySchema, stayQuoteBodySchema` from validation; `import type { HotelCatalogEntry } from 'src/modules/hotel/util/hotel-catalog';` and `import type { PaginatedResult } from 'src/types/util.types';`) and append:
 
 ```ts
 export type StaySearchQuery = z.output<typeof staySearchQuerySchema>;
@@ -2426,7 +2426,7 @@ export type StayQuoteResponse = {
 };
 ```
 
-- [ ] **Step 3: Service (`hotel-availability.service.ts`)**
+- [x] **Step 3: Service (`hotel-availability.service.ts`)**
 
 ```ts
 import { Injectable } from '@nestjs/common';
@@ -2596,7 +2596,7 @@ export class HotelAvailabilityService {
 
 In `hotel-availability.module.ts`, import `HotelAvailabilityService`, add it to `providers`, and add `exports: [HotelAvailabilityService]`.
 
-- [ ] **Step 4: Swagger.** Append to `swagger/availability.swagger.ts` (add `import { DestinatiosnEnum } from 'generated/prisma/client';`):
+- [x] **Step 4: Swagger.** Append to `swagger/availability.swagger.ts` (add `import { DestinatiosnEnum } from 'generated/prisma/client';`):
 
 ```ts
 const VISITOR_CATEGORY_DOC = {
@@ -2692,7 +2692,7 @@ export const StayQuoteSwagger = () =>
   );
 ```
 
-- [ ] **Step 5: Controller.** In `hotel.controller.ts`, add `Header`, `HttpCode` and `HttpStatus` to the `@nestjs/common` import, and import `HotelAvailabilityService`, `staySearchQuerySchema`, `stayQuoteBodySchema`, `SearchHotelStaysSwagger`, `StayQuoteSwagger`, and the types `StayQuoteBody` and `StaySearchQuery` (with `import type`). Inject the service: `constructor(private readonly hotelService: HotelService, private readonly hotelAvailabilityService: HotelAvailabilityService) {}`. Insert between `findAll` and `findOne`; `search` must stay above `@Get(':id')`:
+- [x] **Step 5: Controller.** In `hotel.controller.ts`, add `Header`, `HttpCode` and `HttpStatus` to the `@nestjs/common` import, and import `HotelAvailabilityService`, `staySearchQuerySchema`, `stayQuoteBodySchema`, `SearchHotelStaysSwagger`, `StayQuoteSwagger`, and the types `StayQuoteBody` and `StaySearchQuery` (with `import type`). Inject the service: `constructor(private readonly hotelService: HotelService, private readonly hotelAvailabilityService: HotelAvailabilityService) {}`. Insert between `findAll` and `findOne`; `search` must stay above `@Get(':id')`:
 
 ```ts
   @IsPublic(true)
@@ -2719,9 +2719,9 @@ Add after `findOne`:
   }
 ```
 
-- [ ] **Step 6: Build.** `npm run build`. Expected: exit 0.
+- [x] **Step 6: Build.** `npm run build`. Expected: exit 0.
 
-- [ ] **Step 7: Write `.tmp/availability-verify/stay.mjs`**
+- [x] **Step 7: Write `.tmp/availability-verify/stay.mjs`**
 
 ```js
 import { isDeepStrictEqual } from 'node:util';
@@ -2838,9 +2838,9 @@ export default async function errors() {
 }
 ```
 
-- [ ] **Step 8: Run it.** `. .\.tmp\local-session.ps1; node .tmp/availability-verify/run.mjs stay errors`. Expected: `43/43 passed`.
+- [x] **Step 8: Run it.** `. .\.tmp\local-session.ps1; node .tmp/availability-verify/run.mjs stay errors`. Expected: `43/43 passed`.
 
-- [ ] **Step 9: Lint and commit**
+- [x] **Step 9: Lint and commit**
 
 ```powershell
 npx eslint --fix src/modules/hotel-availability src/modules/hotel/hotel.controller.ts
