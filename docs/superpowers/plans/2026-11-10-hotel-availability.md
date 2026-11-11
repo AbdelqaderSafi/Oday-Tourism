@@ -232,7 +232,7 @@ git commit -m "feat(db): add room capacity, calendar revision and nightly room c
 
 **Produces:** `AVAILABILITY_LIMITS`; `Cents`, `parseAmount`, `formatAmount`, `formatAmountOrNull`; `isCalendarDate`, `addDays`, `daysBetween`, `stayNights`, `hotelToday`.
 
-- [ ] **Step 1: Write the failing tests.** `src/modules/hotel-availability/engine/money.spec.ts`:
+- [x] **Step 1: Write the failing tests.** `src/modules/hotel-availability/engine/money.spec.ts`:
 
 ```ts
 import { formatAmount, formatAmountOrNull, parseAmount } from './money';
@@ -297,9 +297,9 @@ describe('stay dates', () => {
 });
 ```
 
-- [ ] **Step 2: Run them to confirm they fail.** `npx jest src/modules/hotel-availability/engine`. Expected: FAIL with `Cannot find module './money'` and `'./stay-dates'`.
+- [x] **Step 2: Run them to confirm they fail.** `npx jest src/modules/hotel-availability/engine`. Expected: FAIL with `Cannot find module './money'` and `'./stay-dates'`.
 
-- [ ] **Step 3: Implement.** `engine/availability-limits.ts`:
+- [x] **Step 3: Implement.** `engine/availability-limits.ts`:
 
 ```ts
 export const AVAILABILITY_LIMITS = {
@@ -380,9 +380,9 @@ export function hotelToday(now: Date = new Date()): string {
 }
 ```
 
-- [ ] **Step 4: Run the tests.** `npx jest src/modules/hotel-availability/engine`. Expected: `Tests: 7 passed`.
+- [x] **Step 4: Run the tests.** `npx jest src/modules/hotel-availability/engine`. Expected: `Tests: 7 passed`.
 
-- [ ] **Step 5: Lint and commit**
+- [x] **Step 5: Lint and commit**
 
 ```powershell
 npx eslint --fix src/modules/hotel-availability/engine
