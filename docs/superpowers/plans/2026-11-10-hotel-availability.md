@@ -41,7 +41,7 @@ Local only, gitignored: `.env.local`, `.tmp/local-session.ps1`, `.tmp/start-loca
 
 **Produces:** `oday_tourism_dev` with every existing migration applied; `.tmp/local-session.ps1` (sets `DATABASE_URL`, defines `Invoke-LocalSql`); `.tmp/start-local-server.ps1`.
 
-- [ ] **Step 1: Ask the user for the local connection.** Stop and ask the user to create `.env.local` (gitignored) in the repo root with one line, percent-encoding special characters in the password:
+- [x] **Step 1: Ask the user for the local connection.** Stop and ask the user to create `.env.local` (gitignored) in the repo root with one line, percent-encoding special characters in the password:
 
 ```text
 DATABASE_URL="mysql://root:YOUR_PASSWORD@127.0.0.1:3306/oday_tourism_dev?allowPublicKeyRetrieval=true"
@@ -49,7 +49,7 @@ DATABASE_URL="mysql://root:YOUR_PASSWORD@127.0.0.1:3306/oday_tourism_dev?allowPu
 
 Continue only after they confirm. Do not ask them to paste the password into chat. Check that `Get-Service MySQL94` shows `Running`.
 
-- [ ] **Step 2: Create `.tmp/local-session.ps1`**
+- [x] **Step 2: Create `.tmp/local-session.ps1`**
 
 ```powershell
 $line = Get-Content (Join-Path $PSScriptRoot '..\.env.local') | Where-Object { $_ -match '^\s*DATABASE_URL\s*=' } | Select-Object -First 1
@@ -73,7 +73,7 @@ function Invoke-LocalSql([string]$Sql, [switch]$NoDatabase) {
 "Local database: $($dbUri.Host):$($dbUri.Port)$($dbUri.AbsolutePath)"
 ```
 
-- [ ] **Step 3: Create `.tmp/start-local-server.ps1`**
+- [x] **Step 3: Create `.tmp/start-local-server.ps1`**
 
 ```powershell
 . (Join-Path $PSScriptRoot 'local-session.ps1')
@@ -82,7 +82,7 @@ Set-Location (Join-Path $PSScriptRoot '..')
 npm run start:dev
 ```
 
-- [ ] **Step 4: Create the database and apply the existing migrations**
+- [x] **Step 4: Create the database and apply the existing migrations**
 
 ```powershell
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
@@ -93,7 +93,7 @@ npx prisma migrate status
 
 Expected: `Local database: 127.0.0.1:3306/oday_tourism_dev`, and `migrate status` names `MySQL database "oday_tourism_dev" at "127.0.0.1:3306"` with 15 unapplied migrations. If it names any other host, stop. Then run `npx prisma migrate deploy`. Expected: `All migrations have been successfully applied.` If an old migration fails, stop and report; never edit old migrations.
 
-- [ ] **Step 5: Record the drift baseline**
+- [x] **Step 5: Record the drift baseline**
 
 ```powershell
 npx prisma migrate diff --from-config-datasource --to-schema prisma/schema.prisma --script -o .tmp/drift-before.sql
@@ -108,7 +108,7 @@ Expected drift only: dropping `room.capacity`, `trips`/`comments` `city` columns
 
 **Produces:** Prisma fields `Room.capacity` (column `guest_capacity`), `Room.calendar_revision`, `hotels.calendar_managed_at`, model `RoomCalendarDay`; regenerated client.
 
-- [ ] **Step 1: Edit `prisma/schema.prisma`.** In `model hotels`, add after `youtube_video_url`:
+- [x] **Step 1: Edit `prisma/schema.prisma`.** In `model hotels`, add after `youtube_video_url`:
 
 ```prisma
   calendar_managed_at DateTime?
@@ -157,7 +157,7 @@ model RoomCalendarDay {
 
 Run `npx prisma format; npx prisma validate`. Expected: `The schema at prisma\schema.prisma is valid`.
 
-- [ ] **Step 2: Create `prisma/migrations/20261110120000_add_hotel_availability/migration.sql`**
+- [x] **Step 2: Create `prisma/migrations/20261110120000_add_hotel_availability/migration.sql`**
 
 ```sql
 -- Hotel availability: room capacity, calendar revisions and the nightly room calendar.
@@ -203,7 +203,7 @@ CREATE TABLE `room_calendar_days` (
 ALTER TABLE `room_calendar_days` ADD CONSTRAINT `room_calendar_days_room_id_fkey` FOREIGN KEY (`room_id`) REFERENCES `room`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 ```
 
-- [ ] **Step 3: Generate, apply locally, verify**
+- [x] **Step 3: Generate, apply locally, verify**
 
 ```powershell
 npx prisma generate
@@ -217,7 +217,7 @@ Compare-Object (Get-Content .tmp/drift-before.sql) (Get-Content .tmp/drift-after
 
 Expected: status lists exactly `20261110120000_add_hotel_availability` as pending, and deploy applies it. Columns: `room.capacity varchar(50) YES`, `room.guest_capacity tinyint unsigned YES`, `room.calendar_revision int unsigned NO 0`, `hotels.calendar_managed_at datetime(3) YES`, and the seven `room_calendar_days` columns. `drift-after.sql` mentions none of `guest_capacity`, `calendar_revision`, `calendar_managed_at` or `room_calendar_days`. Small statement reordering in `Compare-Object` is fine.
 
-- [ ] **Step 4: Build and commit**
+- [x] **Step 4: Build and commit**
 
 Run `npm run build`. Expected: exit 0.
 
