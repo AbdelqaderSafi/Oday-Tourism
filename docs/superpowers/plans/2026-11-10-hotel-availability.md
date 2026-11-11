@@ -396,13 +396,13 @@ git commit -m "feat(availability): add money, Cairo date helpers and limits"
 
 **Produces (`engine/stay-pricing.ts`):** `Currency`, `VisitorCategory`, `Rates`, `VISITOR_CURRENCY`, `CalendarNight`, `RoomTypeStock`, `NightlyRate`, `RoomStayTerms`, `UpgradeSelection`, `PricedStay`, `toBaseRate`, `roomStayTerms`, `priceStay`. It imports only the `RoomPick` type from `room-allocation.ts`, so create that type first.
 
-- [ ] **Step 1: Create the shared type.** `engine/room-allocation.ts` (completed in Task 5):
+- [x] **Step 1: Create the shared type.** `engine/room-allocation.ts` (completed in Task 5):
 
 ```ts
 export type RoomPick = { roomId: string; quantity: number };
 ```
 
-- [ ] **Step 2: Write the failing test** `engine/stay-pricing.spec.ts`:
+- [x] **Step 2: Write the failing test** `engine/stay-pricing.spec.ts`:
 
 ```ts
 import { CalendarNight, priceStay, roomStayTerms, RoomTypeStock, toBaseRate } from './stay-pricing';
@@ -525,9 +525,9 @@ describe('priceStay', () => {
 });
 ```
 
-- [ ] **Step 3: Run it to confirm it fails.** `npx jest src/modules/hotel-availability/engine/stay-pricing`. Expected: FAIL, `Cannot find module './stay-pricing'`.
+- [x] **Step 3: Run it to confirm it fails.** `npx jest src/modules/hotel-availability/engine/stay-pricing`. Expected: FAIL, `Cannot find module './stay-pricing'`.
 
-- [ ] **Step 4: Implement** `engine/stay-pricing.ts`:
+- [x] **Step 4: Implement** `engine/stay-pricing.ts`:
 
 ```ts
 import { Cents, parseAmount } from './money';
@@ -629,9 +629,9 @@ export function priceStay(rooms: RoomPick[], terms: RoomStayTerms[], upgrades: U
 }
 ```
 
-- [ ] **Step 5: Run the tests.** Expected: `Tests: 10 passed` for `stay-pricing.spec.ts`.
+- [x] **Step 5: Run the tests.** Expected: `Tests: 10 passed` for `stay-pricing.spec.ts`.
 
-- [ ] **Step 6: Lint and commit**
+- [x] **Step 6: Lint and commit**
 
 ```powershell
 npx eslint --fix src/modules/hotel-availability/engine
