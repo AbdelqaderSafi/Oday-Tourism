@@ -9,7 +9,25 @@ import {
   UploadedFiles,
   Query,
   Patch,
+  UseFilters,
+  Header,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
+import { AvailabilityExceptionFilter } from '../hotel-availability/util/availability-exception.filter';
+import { HotelAvailabilityService } from '../hotel-availability/hotel-availability.service';
+import {
+  staySearchQuerySchema,
+  stayQuoteBodySchema,
+} from '../hotel-availability/util/availability.validation';
+import {
+  SearchHotelStaysSwagger,
+  StayQuoteSwagger,
+} from '../hotel-availability/swagger/availability.swagger';
+import type {
+  StayQuoteBody,
+  StaySearchQuery,
+} from '../hotel-availability/types/availability.dto';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { IsPublic } from 'src/decorators/public.decorator';
 import { HotelService } from './hotel.service';
@@ -39,7 +57,10 @@ import type { HotelQuery } from './types/hotel.types';
 @ApiBearerAuth()
 @Controller('hotel')
 export class HotelController {
-  constructor(private readonly hotelService: HotelService) {}
+  constructor(
+    private readonly hotelService: HotelService,
+    private readonly hotelAvailabilityService: HotelAvailabilityService,
+  ) {}
 
   @Post()
   @UseInterceptors(
@@ -72,10 +93,34 @@ export class HotelController {
   }
 
   @IsPublic(true)
+  @Get('search')
+  @Header('Cache-Control', 'no-store')
+  @UseFilters(AvailabilityExceptionFilter)
+  @SearchHotelStaysSwagger()
+  search(
+    @Query(new ZodValidationPipe(staySearchQuerySchema)) query: StaySearchQuery,
+  ) {
+    return this.hotelAvailabilityService.search(query);
+  }
+
+  @IsPublic(true)
   @Get(':id')
   @FindOneHotelSwagger()
   findOne(@Param('id') id: string) {
     return this.hotelService.findOne(id);
+  }
+
+  @IsPublic(true)
+  @Post(':hotelId/stay-quote')
+  @HttpCode(HttpStatus.OK)
+  @Header('Cache-Control', 'no-store')
+  @UseFilters(AvailabilityExceptionFilter)
+  @StayQuoteSwagger()
+  quote(
+    @Param('hotelId') hotelId: string,
+    @Body(new ZodValidationPipe(stayQuoteBodySchema)) body: StayQuoteBody,
+  ) {
+    return this.hotelAvailabilityService.quote(hotelId, body);
   }
 
   @Patch(':id')
@@ -86,6 +131,7 @@ export class HotelController {
     ]),
     FileCleanupInterceptor,
   )
+  @UseFilters(AvailabilityExceptionFilter)
   @UpdateHotelSwagger()
   update(
     @Param('id') id: string,

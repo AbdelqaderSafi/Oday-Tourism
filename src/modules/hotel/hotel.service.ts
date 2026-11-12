@@ -4,13 +4,32 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { randomUUID } from 'crypto';
-import { CreateHotelDto, UpdateHotelRequest } from './types/hotel.dto';
+import {
+  CreateHotelDto,
+  RoomInput,
+  RoomUpdateInput,
+  UpdateHotelRequest,
+} from './types/hotel.dto';
 import { Prisma } from 'generated/prisma/client';
 import { DatabaseService } from '../database/database.service';
 import { FileService } from '../file/file.service';
 import { HotelQuery } from './types/hotel.types';
 import { removeFields } from '../utils/object.util';
 import { getDiscountPriceIssues, throwPriceIssues } from '../utils/price.util';
+import { HOTEL_CATALOG_INCLUDE } from './util/hotel-catalog';
+import {
+  invalidInput,
+  roomIdsRequired,
+} from '../hotel-availability/util/availability.errors';
+
+type RoomWriteRequest = Pick<
+  UpdateHotelRequest,
+  'rooms' | 'rooms_write_mode' | 'delete_room_ids'
+>;
+
+const isExistingRoom = (
+  row: RoomInput | RoomUpdateInput,
+): row is RoomUpdateInput => 'id' in row;
 
 @Injectable()
 export class HotelService {
@@ -57,21 +76,7 @@ export class HotelService {
 
       if (rooms?.length) {
         for (const room of rooms) {
-          const roomId = randomUUID();
-          const { translations: roomTranslations, price, ...roomRest } = room;
-          await tx.room.create({
-            data: {
-              id: roomId,
-              hotel_id: hotelId,
-              price: price as Prisma.Decimal,
-              ...roomRest,
-            },
-          });
-          for (const t of roomTranslations) {
-            await tx.roomTranslation.create({
-              data: { room_id: roomId, ...t },
-            });
-          }
+          await this.createRoom(tx, hotelId, room);
         }
       }
 
@@ -118,18 +123,7 @@ export class HotelService {
 
       return tx.hotels.findUniqueOrThrow({
         where: { id: hotelId },
-        include: {
-          assets: true,
-          translations: true,
-          rooms: {
-            where: { is_deleted: false },
-            include: { translations: true },
-          },
-          addons: {
-            where: { is_deleted: false },
-            include: { translations: true },
-          },
-        },
+        include: HOTEL_CATALOG_INCLUDE,
       });
     });
   }
@@ -146,18 +140,7 @@ export class HotelService {
       const hotels = await prisma.hotels.findMany({
         ...removeFields(pagination, ['page']),
         where: whereClause,
-        include: {
-          assets: true,
-          translations: true,
-          rooms: {
-            where: { is_deleted: false },
-            include: { translations: true },
-          },
-          addons: {
-            where: { is_deleted: false },
-            include: { translations: true },
-          },
-        },
+        include: HOTEL_CATALOG_INCLUDE,
       });
 
       const count = await prisma.hotels.count({
@@ -178,18 +161,7 @@ export class HotelService {
   findOne(id: string) {
     return this.prismaService.hotels.findUnique({
       where: { id },
-      include: {
-        assets: true,
-        translations: true,
-        rooms: {
-          where: { is_deleted: false },
-          include: { translations: true },
-        },
-        addons: {
-          where: { is_deleted: false },
-          include: { translations: true },
-        },
-      },
+      include: HOTEL_CATALOG_INCLUDE,
     });
   }
 
@@ -207,8 +179,15 @@ export class HotelService {
     });
     if (!hotel) throw new NotFoundException('الفندق غير موجود');
 
-    const { deleteAssetIds, translations, rooms, addons, ...rest } =
-      updateHotelDto;
+    const {
+      deleteAssetIds,
+      translations,
+      rooms,
+      rooms_write_mode,
+      delete_room_ids,
+      addons,
+      ...rest
+    } = updateHotelDto;
 
     const discountFields = [
       'is_discounted',
@@ -231,6 +210,14 @@ export class HotelService {
       .map((a) => a.fileId);
 
     await this.prismaService.$transaction(async (tx) => {
+      if (rooms !== undefined || delete_room_ids !== undefined) {
+        await this.lockRoomChanges(tx, id, {
+          rooms,
+          rooms_write_mode,
+          delete_room_ids,
+        });
+      }
+
       if (deleteAssetIds?.length) {
         await tx.$executeRaw`
           DELETE FROM assets WHERE hotel_id = ${id}
@@ -279,34 +266,14 @@ export class HotelService {
         }
       }
 
-      if (rooms !== undefined) {
-        const existingRooms = await tx.room.findMany({
-          where: { hotel_id: id },
-          select: { id: true },
-        });
-        if (existingRooms.length) {
-          await tx.roomTranslation.deleteMany({
-            where: { room_id: { in: existingRooms.map((r) => r.id) } },
-          });
-          await tx.room.deleteMany({ where: { hotel_id: id } });
-        }
-        for (const room of rooms) {
-          const roomId = randomUUID();
-          const { translations: roomTranslations, price, ...roomRest } = room;
-          await tx.room.create({
-            data: {
-              id: roomId,
-              hotel_id: id,
-              price: price as Prisma.Decimal,
-              ...roomRest,
-            },
-          });
-          for (const t of roomTranslations) {
-            await tx.roomTranslation.create({
-              data: { room_id: roomId, ...t },
-            });
-          }
-        }
+      if (rooms_write_mode === 'by_id') {
+        await this.writeRoomsById(tx, id, rooms ?? [], delete_room_ids ?? []);
+      } else if (rooms !== undefined) {
+        await this.replaceRooms(
+          tx,
+          id,
+          rooms.filter((row): row is RoomInput => !isExistingRoom(row)),
+        );
       }
 
       if (addons !== undefined) {
@@ -365,18 +332,7 @@ export class HotelService {
 
     return this.prismaService.hotels.findUniqueOrThrow({
       where: { id },
-      include: {
-        assets: true,
-        translations: true,
-        rooms: {
-          where: { is_deleted: false },
-          include: { translations: true },
-        },
-        addons: {
-          where: { is_deleted: false },
-          include: { translations: true },
-        },
-      },
+      include: HOTEL_CATALOG_INCLUDE,
     });
   }
 
@@ -385,5 +341,110 @@ export class HotelService {
       where: { id },
       data: { is_deleted: true },
     });
+  }
+
+  // Room writes lock the hotel row first; calendar writes do the same, so the two never deadlock.
+  private async lockRoomChanges(
+    tx: Prisma.TransactionClient,
+    hotelId: string,
+    request: RoomWriteRequest,
+  ) {
+    const [hotel] = await tx.$queryRaw<{ calendar_managed_at: Date | null }[]>`
+      SELECT calendar_managed_at FROM hotels WHERE id = ${hotelId} FOR UPDATE
+    `;
+    if (request.rooms_write_mode !== 'by_id') {
+      if (hotel?.calendar_managed_at) throw roomIdsRequired();
+      return;
+    }
+    const editedIds = (request.rooms ?? [])
+      .filter(isExistingRoom)
+      .map((row) => row.id);
+    await this.assertActiveRooms(tx, hotelId, editedIds, 'rooms');
+    await this.assertActiveRooms(
+      tx,
+      hotelId,
+      request.delete_room_ids ?? [],
+      'delete_room_ids',
+    );
+  }
+
+  private async assertActiveRooms(
+    tx: Prisma.TransactionClient,
+    hotelId: string,
+    roomIds: string[],
+    field: string,
+  ) {
+    if (!roomIds.length) return;
+    const found = await tx.room.count({
+      where: { id: { in: roomIds }, hotel_id: hotelId, is_deleted: false },
+    });
+    if (found !== roomIds.length)
+      throw invalidInput(field, 'معرّف غرفة غير صالح لهذا الفندق');
+  }
+
+  private async replaceRooms(
+    tx: Prisma.TransactionClient,
+    hotelId: string,
+    rooms: RoomInput[],
+  ) {
+    await tx.room.updateMany({
+      where: { hotel_id: hotelId, is_deleted: false },
+      data: { is_deleted: true },
+    });
+    for (const room of rooms) await this.createRoom(tx, hotelId, room);
+  }
+
+  private async writeRoomsById(
+    tx: Prisma.TransactionClient,
+    hotelId: string,
+    rows: (RoomInput | RoomUpdateInput)[],
+    deleteIds: string[],
+  ) {
+    for (const row of rows) {
+      if (isExistingRoom(row)) await this.updateRoom(tx, row);
+      else await this.createRoom(tx, hotelId, row);
+    }
+    if (deleteIds.length) {
+      await tx.room.updateMany({
+        where: { id: { in: deleteIds }, hotel_id: hotelId },
+        data: { is_deleted: true },
+      });
+    }
+  }
+
+  private async createRoom(
+    tx: Prisma.TransactionClient,
+    hotelId: string,
+    room: RoomInput,
+  ) {
+    const roomId = randomUUID();
+    const { translations, ...fields } = room;
+    await tx.room.create({
+      data: { id: roomId, hotel_id: hotelId, ...fields },
+    });
+    for (const translation of translations) {
+      await tx.roomTranslation.create({
+        data: { room_id: roomId, ...translation },
+      });
+    }
+  }
+
+  private async updateRoom(
+    tx: Prisma.TransactionClient,
+    { id, translations, ...fields }: RoomUpdateInput,
+  ) {
+    await tx.room.update({ where: { id }, data: fields });
+    for (const translation of translations ?? []) {
+      await tx.roomTranslation.upsert({
+        where: {
+          room_id_language: { room_id: id, language: translation.language },
+        },
+        update: {
+          name: translation.name,
+          description: translation.description,
+        },
+        create: { room_id: id, ...translation },
+      });
+    }
   }
 }

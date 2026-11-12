@@ -19,6 +19,15 @@ export const CreateRoomSwagger = () =>
             description:
               'السعر بالجنيه المصري (اختياري، القيمة الفارغة تعني null)',
           },
+          capacity: {
+            type: 'integer',
+            minimum: 1,
+            maximum: 50,
+            nullable: true,
+            example: 2,
+            description:
+              'عدد الضيوف لكل وحدة من هذا النوع (اختياري). null أو نص فارغ يمسحها، والغرفة بلا سعة لا تظهر في البحث بالتواريخ',
+          },
           translations: {
             type: 'array',
             items: {
@@ -88,6 +97,15 @@ export const UpdateRoomSwagger = () =>
             nullable: true,
             description:
               'السعر بالجنيه المصري (اختياري، القيمة الفارغة تعني null)',
+          },
+          capacity: {
+            type: 'integer',
+            minimum: 1,
+            maximum: 50,
+            nullable: true,
+            example: 2,
+            description:
+              'عدد الضيوف لكل وحدة من هذا النوع (اختياري). null أو نص فارغ يمسحها، والغرفة بلا سعة لا تظهر في البحث بالتواريخ',
           },
           translations: {
             type: 'array',

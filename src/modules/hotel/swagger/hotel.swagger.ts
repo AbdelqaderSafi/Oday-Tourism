@@ -135,9 +135,9 @@ export const CreateHotelSwagger = () =>
           rooms: {
             type: 'string',
             example:
-              '[{"price":150,"price_egp":1500,"translations":[{"language":"ar","name":"غرفة ديلوكس","description":"غرفة فاخرة مع إطلالة على البحر"},{"language":"en","name":"Deluxe Room","description":"Luxury room with sea view"}]}]',
+              '[{"price":150,"price_egp":1500,"capacity":2,"translations":[{"language":"ar","name":"غرفة ديلوكس","description":"غرفة فاخرة مع إطلالة على البحر"},{"language":"en","name":"Deluxe Room","description":"Luxury room with sea view"}]}]',
             description:
-              'JSON string - مصفوفة الغرف (اختياري). كل غرفة تحتوي: price, price_egp, translations[]',
+              'JSON string - مصفوفة الغرف (اختياري). كل غرفة تحتوي: price, price_egp, capacity (عدد الضيوف لكل وحدة 1-50، اختياري), translations[]',
           },
           addons: {
             type: 'string',
@@ -405,12 +405,24 @@ export const UpdateHotelSwagger = () =>
             description:
               'JSON string - الترجمات المراد تحديثها (upsert). كل ترجمة تحتوي: language, name, description, Facilities',
           },
+          rooms_write_mode: {
+            type: 'string',
+            enum: ['by_id'],
+            description:
+              'by_id: تصبح rooms مصفوفة upsert (صف فيه id يعدّل تلك الغرفة، وصف بدون id ينشئ غرفة، والغرف غير المذكورة تبقى). بدونها: إرسال rooms يستبدل كل الغرف، ويُرفض بـ 409 ROOM_IDS_REQUIRED إذا بدأ الفندق استخدام التقويم',
+          },
           rooms: {
             type: 'string',
             example:
-              '[{"price":150,"price_egp":1500,"translations":[{"language":"ar","name":"غرفة ديلوكس","description":"غرفة فاخرة مع إطلالة على البحر"},{"language":"en","name":"Deluxe Room","description":"Luxury room with sea view"}]}]',
+              '[{"id":"9b2f1c7e-4d3a-4f6b-8a1e-2c5d7f9e0a13","capacity":3,"translations":[{"language":"en","name":"Family Room"}]},{"price":150,"price_egp":1500,"capacity":2,"translations":[{"language":"ar","name":"غرفة ديلوكس"}]}]',
             description:
-              'JSON string - الغرف (اختياري). إرسالها يستبدل الغرف الحالية، ومصفوفة فارغة تحذفها، وعدم إرسالها يُبقيها (اختياري). كل غرفة تحتوي: price, price_egp, translations[]',
+              'JSON string - الغرف (اختياري). صف بدون id يحتاج price, price_egp, translations ويقبل capacity. صف فيه id (مع by_id فقط) كل حقوله اختيارية: price, price_egp, capacity, translations',
+          },
+          delete_room_ids: {
+            type: 'string',
+            example: '["9b2f1c7e-4d3a-4f6b-8a1e-2c5d7f9e0a13"]',
+            description:
+              'JSON string - معرّفات غرف لأرشفتها (يتطلب rooms_write_mode=by_id)',
           },
           addons: {
             type: 'string',
@@ -445,6 +457,11 @@ export const UpdateHotelSwagger = () =>
     ApiResponse({ status: 200, description: 'تم تعديل الفندق بنجاح' }),
     ApiResponse({ status: 400, description: 'بيانات غير صحيحة' }),
     ApiResponse({ status: 401, description: 'غير مصرح' }),
+    ApiResponse({
+      status: 409,
+      description:
+        'ROOM_IDS_REQUIRED: استبدال الغرف بدون by_id لفندق يستخدم التقويم',
+    }),
     ApiResponse({ status: 404, description: 'الفندق غير موجود' }),
   );
 

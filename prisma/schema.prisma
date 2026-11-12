@@ -73,22 +73,23 @@ model gallery {
 }
 
 model hotels {
-  id                  String              @id @default(uuid()) @db.VarChar(36)
-  slug                String              @unique @db.VarChar(255)
+  id                  String             @id @default(uuid()) @db.VarChar(36)
+  slug                String             @unique @db.VarChar(255)
   destination         DestinatiosnEnum
-  initial_price       Decimal             @db.Decimal(10, 2)
-  initial_price_egp   Decimal?            @db.Decimal(10, 2)
+  initial_price       Decimal            @db.Decimal(10, 2)
+  initial_price_egp   Decimal?           @db.Decimal(10, 2)
   stars               hotels_stars
   rating              HotelFilterRating
   meal_plan           HotelMealPlan?
-  is_discounted       Boolean             @default(false)
-  discount_percentage Decimal?            @db.Decimal(5, 2)
-  original_price      Decimal?            @db.Decimal(10, 2)
-  original_price_egp  Decimal?            @db.Decimal(10, 2)
-  youtube_video_url   String?             @db.Text
-  is_deleted          Boolean             @default(false)
-  created_at          DateTime            @default(now())
-  updated_at          DateTime            @updatedAt
+  is_discounted       Boolean            @default(false)
+  discount_percentage Decimal?           @db.Decimal(5, 2)
+  original_price      Decimal?           @db.Decimal(10, 2)
+  original_price_egp  Decimal?           @db.Decimal(10, 2)
+  youtube_video_url   String?            @db.Text
+  calendar_managed_at DateTime?
+  is_deleted          Boolean            @default(false)
+  created_at          DateTime           @default(now())
+  updated_at          DateTime           @updatedAt
   translations        HotelTranslation[]
   rooms               Room[]
   addons              HotelAddon[]
@@ -163,15 +164,19 @@ model TripAddonTranslation {
 }
 
 model Room {
-  id           String            @id @default(uuid()) @db.VarChar(36)
-  price        Decimal           @db.Decimal(10, 2)
-  price_egp    Decimal?          @db.Decimal(10, 2)
-  hotel_id     String            @db.VarChar(36)
-  is_deleted   Boolean           @default(false)
-  created_at   DateTime          @default(now())
-  updated_at   DateTime          @updatedAt
-  hotel        hotels            @relation(fields: [hotel_id], references: [id])
-  translations RoomTranslation[]
+  id                String            @id @default(uuid()) @db.VarChar(36)
+  price             Decimal           @db.Decimal(10, 2)
+  price_egp         Decimal?          @db.Decimal(10, 2)
+  // Not `capacity`: databases built from the migrations still have a legacy room.capacity VARCHAR column.
+  capacity          Int?              @map("guest_capacity") @db.UnsignedTinyInt
+  calendar_revision Int               @default(0) @db.UnsignedInt
+  hotel_id          String            @db.VarChar(36)
+  is_deleted        Boolean           @default(false)
+  created_at        DateTime          @default(now())
+  updated_at        DateTime          @updatedAt
+  hotel             hotels            @relation(fields: [hotel_id], references: [id])
+  translations      RoomTranslation[]
+  calendar_days     RoomCalendarDay[]
 
   @@index([hotel_id], map: "room_hotel_id_fkey")
   @@map("room")
@@ -187,6 +192,20 @@ model RoomTranslation {
 
   @@unique([room_id, language])
   @@map("room_translations")
+}
+
+model RoomCalendarDay {
+  room_id           String   @db.VarChar(36)
+  stay_date         DateTime @db.Date
+  available_units   Int      @default(0) @db.UnsignedSmallInt
+  rate_override_usd Decimal? @db.Decimal(10, 2)
+  rate_override_egp Decimal? @db.Decimal(10, 2)
+  created_at        DateTime @default(now())
+  updated_at        DateTime @updatedAt
+  room              Room     @relation(fields: [room_id], references: [id])
+
+  @@id([room_id, stay_date])
+  @@map("room_calendar_days")
 }
 
 model offers {
@@ -234,21 +253,21 @@ model settings {
 }
 
 model trips {
-  id                 String            @id @default(uuid()) @db.VarChar(36)
-  slug               String            @unique @db.VarChar(255)
-  city               DestinatiosnEnum
-  price              Decimal           @db.Decimal(10, 2)
-  price_egp          Decimal?          @db.Decimal(10, 2)
-  start_time         String            @db.VarChar(255)
-  end_time           String            @db.VarChar(255)
-  youtube_video_url  String?           @db.Text
-  is_deleted         Boolean           @default(false)
-  created_at   DateTime          @default(now())
-  updated_at   DateTime          @updatedAt
-  translations TripTranslation[]
-  options      TripOption[]
-  addons       TripAddon[]
-  assets       Asset[]
+  id                String            @id @default(uuid()) @db.VarChar(36)
+  slug              String            @unique @db.VarChar(255)
+  city              DestinatiosnEnum
+  price             Decimal           @db.Decimal(10, 2)
+  price_egp         Decimal?          @db.Decimal(10, 2)
+  start_time        String            @db.VarChar(255)
+  end_time          String            @db.VarChar(255)
+  youtube_video_url String?           @db.Text
+  is_deleted        Boolean           @default(false)
+  created_at        DateTime          @default(now())
+  updated_at        DateTime          @updatedAt
+  translations      TripTranslation[]
+  options           TripOption[]
+  addons            TripAddon[]
+  assets            Asset[]
 }
 
 model TripTranslation {
@@ -502,4 +521,3 @@ enum Airline {
   AIR_CAIRO
   OTHER
 }
-

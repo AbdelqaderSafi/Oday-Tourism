@@ -17,11 +17,20 @@ export type TranslationInput = {
 export type RoomInput = {
   price: Prisma.Decimal;
   price_egp: Prisma.Decimal;
+  capacity?: number | null;
   translations: {
     language: LanguageEnum;
     name: string;
     description?: string;
   }[];
+};
+
+export type RoomUpdateInput = {
+  id: string;
+  price?: Prisma.Decimal;
+  price_egp?: Prisma.Decimal | null;
+  capacity?: number | null;
+  translations?: RoomInput['translations'];
 };
 
 export type AddonInput = {
@@ -50,7 +59,10 @@ export type CreateHotelDto = {
 
 export type UpdateHotelDto = Partial<CreateHotelDto>;
 
-export type UpdateHotelRequest = UpdateHotelDto & {
+export type UpdateHotelRequest = Omit<UpdateHotelDto, 'rooms'> & {
+  rooms?: (RoomInput | RoomUpdateInput)[];
+  rooms_write_mode?: 'by_id';
+  delete_room_ids?: string[];
   deleteAssetIds?: string[];
 };
 
