@@ -39,6 +39,13 @@ export type AddonInput = {
   translations: { language: LanguageEnum; name: string; description: string }[];
 };
 
+export type AddonUpdateInput = {
+  id: string;
+  price?: Prisma.Decimal;
+  price_egp?: Prisma.Decimal | null;
+  translations?: AddonInput['translations'];
+};
+
 export type CreateHotelDto = {
   slug: string;
   destination: DestinatiosnEnum;
@@ -59,10 +66,13 @@ export type CreateHotelDto = {
 
 export type UpdateHotelDto = Partial<CreateHotelDto>;
 
-export type UpdateHotelRequest = Omit<UpdateHotelDto, 'rooms'> & {
+export type UpdateHotelRequest = Omit<UpdateHotelDto, 'rooms' | 'addons'> & {
   rooms?: (RoomInput | RoomUpdateInput)[];
   rooms_write_mode?: 'by_id';
   delete_room_ids?: string[];
+  addons?: (AddonInput | AddonUpdateInput)[];
+  addons_write_mode?: 'by_id';
+  delete_addon_ids?: string[];
   deleteAssetIds?: string[];
 };
 

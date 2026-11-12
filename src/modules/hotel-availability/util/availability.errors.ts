@@ -27,6 +27,14 @@ export function calendarConflict() {
   });
 }
 
+export function addonIdsRequired() {
+  return new ConflictException({
+    code: 'ADDON_IDS_REQUIRED',
+    message:
+      'هذا الفندق يدير الغرف بالتقويم؛ عدّل الترقيات بمعرّفاتها عبر addons_write_mode=by_id',
+  });
+}
+
 export function roomIdsRequired() {
   return new ConflictException({
     code: 'ROOM_IDS_REQUIRED',
