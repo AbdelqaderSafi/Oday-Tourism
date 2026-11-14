@@ -10,6 +10,7 @@ import {
   RoomPick,
 } from './engine/room-allocation';
 import { stayNights } from './engine/stay-dates';
+import { nightOffers } from './engine/stay-calendar';
 import {
   Currency,
   priceStay,
@@ -21,6 +22,8 @@ import {
 } from './engine/stay-pricing';
 import type {
   PricingStatus,
+  StayCalendarQuery,
+  StayCalendarResponse,
   StayQuoteBody,
   StayQuoteResponse,
   StaySearchQuery,
@@ -263,6 +266,44 @@ export class HotelAvailabilityService {
       addons_total: formatAmountOrNull(priced.addonsTotal),
       total: formatAmountOrNull(priced.total),
       quoted_at: new Date().toISOString(),
+    };
+  }
+
+  async stayCalendar(
+    hotelId: string,
+    query: StayCalendarQuery,
+  ): Promise<StayCalendarResponse> {
+    const hotel = UUID_PATTERN.test(hotelId)
+      ? await this.prismaService.hotels.findFirst({
+          where: { id: hotelId, is_deleted: false },
+          select: {
+            rooms: { where: ELIGIBLE_ROOM_WHERE, select: STOCK_ROOM_SELECT },
+          },
+        })
+      : null;
+    if (!hotel) throw notFound('الفندق غير موجود');
+
+    const currency = VISITOR_CURRENCY[query.visitor_category];
+    const roomNights = await loadRoomNights(
+      this.prismaService,
+      hotel.rooms.map((room) => room.id),
+      query.from,
+      query.to,
+      { openOnly: true },
+    );
+    const offers = nightOffers(
+      hotel.rooms.map((room) => toRoomStock(room, roomNights)),
+      stayNights(query.from, query.to),
+      query.adults + query.children,
+      currency,
+    );
+    return {
+      currency,
+      days: offers.map((night) => ({
+        date: night.date,
+        available: night.available,
+        total: formatAmountOrNull(night.total),
+      })),
     };
   }
 }

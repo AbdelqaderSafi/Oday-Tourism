@@ -247,3 +247,34 @@ export const stayQuoteBodySchema = z
       ctx.addIssue({ code: 'custom', ...issue });
     return body;
   });
+
+export const stayCalendarQuerySchema = z
+  .object({
+    from: dateField,
+    to: dateField,
+    adults: z.coerce.number().int().min(1),
+    children: z.coerce.number().int().min(0).default(0),
+    visitor_category: visitorCategoryField,
+  })
+  .transform((query, ctx) => {
+    const today = hotelToday();
+    const nights = daysBetween(query.from, query.to);
+    const issue = (field: string, message: string) =>
+      ctx.addIssue({ code: 'custom', path: [field], message });
+    if (query.from < today) issue('from', 'لا يمكن عرض ليالٍ قبل اليوم');
+    if (nights < 1 || nights > LIMITS.maxStayCalendarNights) {
+      issue(
+        'to',
+        `to يجب أن يكون بعد from بمدى لا يتجاوز ${LIMITS.maxStayCalendarNights} ليلة`,
+      );
+    }
+    if (query.to > addDays(today, LIMITS.bookingWindowDays)) {
+      issue(
+        'to',
+        `to يجب أن يكون خلال ${LIMITS.bookingWindowDays} يومًا من اليوم`,
+      );
+    }
+    if (query.adults + query.children > LIMITS.maxGuests)
+      issue('adults', `عدد الضيوف الإجمالي لا يتجاوز ${LIMITS.maxGuests}`);
+    return query;
+  });
