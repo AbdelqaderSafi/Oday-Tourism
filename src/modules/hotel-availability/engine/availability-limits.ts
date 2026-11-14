@@ -5,6 +5,7 @@ export const AVAILABILITY_LIMITS = {
   defaultSearchPageSize: 20,
   maxSearchPageSize: 100,
   maxCalendarRangeNights: 365,
+  maxStayCalendarNights: 62,
   maxCalendarChanges: 365,
   maxAvailableUnits: 999,
 } as const;

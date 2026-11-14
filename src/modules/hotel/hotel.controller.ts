@@ -19,12 +19,15 @@ import { HotelAvailabilityService } from '../hotel-availability/hotel-availabili
 import {
   staySearchQuerySchema,
   stayQuoteBodySchema,
+  stayCalendarQuerySchema,
 } from '../hotel-availability/util/availability.validation';
 import {
   SearchHotelStaysSwagger,
   StayQuoteSwagger,
+  StayCalendarSwagger,
 } from '../hotel-availability/swagger/availability.swagger';
 import type {
+  StayCalendarQuery,
   StayQuoteBody,
   StaySearchQuery,
 } from '../hotel-availability/types/availability.dto';
@@ -121,6 +124,19 @@ export class HotelController {
     @Body(new ZodValidationPipe(stayQuoteBodySchema)) body: StayQuoteBody,
   ) {
     return this.hotelAvailabilityService.quote(hotelId, body);
+  }
+
+  @IsPublic(true)
+  @Get(':hotelId/stay-calendar')
+  @Header('Cache-Control', 'no-store')
+  @UseFilters(AvailabilityExceptionFilter)
+  @StayCalendarSwagger()
+  stayCalendar(
+    @Param('hotelId') hotelId: string,
+    @Query(new ZodValidationPipe(stayCalendarQuerySchema))
+    query: StayCalendarQuery,
+  ) {
+    return this.hotelAvailabilityService.stayCalendar(hotelId, query);
   }
 
   @Patch(':id')

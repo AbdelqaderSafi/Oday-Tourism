@@ -279,3 +279,42 @@ export const StayQuoteSwagger = () =>
         'STAY_UNAVAILABLE: لا يوجد توزيع يغطي الضيوف أو الاختيار لم يعد متاحًا',
     }),
   );
+
+export const StayCalendarSwagger = () =>
+  applyDecorators(
+    ApiOperation({
+      summary: 'تقويم أسعار الليالي لفندق (لعرض السعر تحت كل تاريخ)',
+      description: `كل ليلة تُحسب كإقامة ليلة واحدة مستقلة للمجموعة كاملة، بنفس نتيجة stay-quote بدون rooms: أرخص توزيع سعره مكتمل بالأسعار الأساسية للغرف أو الأسعار الخاصة. available=false مع total=null إذا لا يوجد توزيع يكفي المجموعة، وavailable=true مع total=null إذا كل التوزيعات المتاحة ناقصة السعر. من 1 إلى ${LIMITS.maxStayCalendarNights} ليلة (to غير مشمول)، from من اليوم (القاهرة) وto حتى ${LIMITS.bookingWindowDays} يومًا. الترقيات غير مشمولة.`,
+    }),
+    ApiParam({ name: 'hotelId', description: 'معرّف الفندق (UUID)' }),
+    ApiQuery({ name: 'from', required: true, example: '2026-11-20' }),
+    ApiQuery({
+      name: 'to',
+      required: true,
+      example: '2026-11-23',
+      description: 'غير مشمول',
+    }),
+    ApiQuery({ name: 'adults', required: true, type: Number, example: 2 }),
+    ApiQuery({ name: 'children', required: false, type: Number, example: 0 }),
+    ApiQuery({
+      name: 'visitor_category',
+      required: true,
+      ...VISITOR_CATEGORY_DOC,
+    }),
+    ApiResponse({
+      status: 200,
+      description: 'ليلة لكل تاريخ مطلوب، بالترتيب، بما فيها المغلقة',
+      schema: {
+        example: {
+          currency: 'EGP',
+          days: [
+            { date: '2026-11-20', available: true, total: '12200.00' },
+            { date: '2026-11-21', available: false, total: null },
+            { date: '2026-11-22', available: true, total: null },
+          ],
+        },
+      },
+    }),
+    ApiResponse({ status: 400, description: `INVALID_INPUT. ${ERROR_SHAPE}` }),
+    ApiResponse({ status: 404, description: 'NOT_FOUND: الفندق غير موجود' }),
+  );

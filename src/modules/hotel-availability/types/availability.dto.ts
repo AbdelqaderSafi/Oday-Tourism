@@ -7,6 +7,7 @@ import type {
   calendarUpdateBodySchema,
   staySearchQuerySchema,
   stayQuoteBodySchema,
+  stayCalendarQuerySchema,
 } from '../util/availability.validation';
 
 export type CalendarRangeQuery = z.output<typeof calendarRangeQuerySchema>;
@@ -31,6 +32,12 @@ export type RoomCalendarUpdateResponse = {
 
 export type StaySearchQuery = z.output<typeof staySearchQuerySchema>;
 export type StayQuoteBody = z.output<typeof stayQuoteBodySchema>;
+export type StayCalendarQuery = z.output<typeof stayCalendarQuerySchema>;
+
+export type StayCalendarResponse = {
+  currency: Currency;
+  days: { date: string; available: boolean; total: string | null }[];
+};
 export type PricingStatus = 'PRICED' | 'ON_REQUEST';
 
 export type StayOffer = {

@@ -131,6 +131,7 @@ Interactive documentation is available at `/api/docs`.
 | `GET` | `/hotel/search` | Dated availability search (public) |
 | `GET` | `/hotel/:id` | Get hotel by ID |
 | `POST` | `/hotel/:hotelId/stay-quote` | Price a stay: recommendation or exact rooms and upgrades (public) |
+| `GET` | `/hotel/:hotelId/stay-calendar` | Per-night availability and one-night party price for a date picker, up to 62 nights (public) |
 | `PATCH` | `/hotel/:id` | Update hotel (`rooms_write_mode=by_id` / `addons_write_mode=by_id` keep room and add-on IDs) |
 | `DELETE` | `/hotel/:id` | Delete hotel |
 
