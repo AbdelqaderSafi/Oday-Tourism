@@ -131,7 +131,7 @@ Interactive documentation is available at `/api/docs`.
 | `GET` | `/hotel/search` | Dated availability search (public) |
 | `GET` | `/hotel/:id` | Get hotel by ID |
 | `POST` | `/hotel/:hotelId/stay-quote` | Price a stay: recommendation or exact rooms and upgrades (public) |
-| `PATCH` | `/hotel/:id` | Update hotel (`rooms_write_mode=by_id` keeps room IDs) |
+| `PATCH` | `/hotel/:id` | Update hotel (`rooms_write_mode=by_id` / `addons_write_mode=by_id` keep room and add-on IDs) |
 | `DELETE` | `/hotel/:id` | Delete hotel |
 
 #### Rooms *(nested under hotel)*
@@ -168,7 +168,8 @@ Interactive documentation is available at `/api/docs`.
 - **Stock:** a room type is offered when it has a `capacity` (1–50) and at least one unit on every night; nights without a calendar row are closed. The nightly rate is that night's override, else the room's base price if above zero, else on request.
 - **Recommendation:** the cheapest fully priced combination, then fewer rooms, then the lowest room IDs; otherwise the fewest rooms on request (`pricing_status: ON_REQUEST`, `total: null`).
 - **Room IDs:** `PATCH /hotel/:id` with `rooms_write_mode=by_id` updates rows that have an `id`, creates rows without one, and archives `delete_room_ids`. Once a hotel has a calendar write, replacing rooms without `by_id` returns `409 ROOM_IDS_REQUIRED`.
-- **Errors** on these routes have the shape `{ statusCode, code, message, field?, errors? }`, with codes `INVALID_INPUT`, `UNAUTHENTICATED`, `NOT_FOUND`, `STAY_UNAVAILABLE`, `CALENDAR_CONFLICT`, `ROOM_IDS_REQUIRED`, `RATE_LIMITED` and `INTERNAL_ERROR`.
+- **Add-on IDs:** the same with `addons_write_mode=by_id` and `delete_addon_ids`. Without `by_id`, sending `addons` replaces them (old ones are archived), and returns `409 ADDON_IDS_REQUIRED` once the hotel has a calendar write. Omitting `addons` leaves them unchanged.
+- **Errors** on these routes have the shape `{ statusCode, code, message, field?, errors? }`, with codes `INVALID_INPUT`, `UNAUTHENTICATED`, `NOT_FOUND`, `STAY_UNAVAILABLE`, `CALENDAR_CONFLICT`, `ROOM_IDS_REQUIRED`, `ADDON_IDS_REQUIRED`, `RATE_LIMITED` and `INTERNAL_ERROR`.
 
 ---
 

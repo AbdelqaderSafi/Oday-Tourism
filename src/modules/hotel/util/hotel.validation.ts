@@ -59,19 +59,29 @@ const roomUpdateRowSchema = z.object({
   translations: roomTranslationsSchema.optional(),
 });
 
+const addonTranslationsSchema = z
+  .array(
+    z.object({
+      language: z.enum(['ar', 'en']),
+      name: z.string().min(2).max(255),
+      description: z.string().min(2),
+    }),
+  )
+  .min(1)
+  .max(2);
+
 const addonInputSchema = z.object({
   price: priceField,
   price_egp: priceField,
-  translations: z
-    .array(
-      z.object({
-        language: z.enum(['ar', 'en']),
-        name: z.string().min(2).max(255),
-        description: z.string().min(2),
-      }),
-    )
-    .min(1)
-    .max(2),
+  translations: addonTranslationsSchema,
+});
+
+// by_id rows: a row with an id edits that add-on; a row without one creates an add-on.
+const addonUpdateRowSchema = z.object({
+  id: uuidLike.toLowerCase(),
+  price: priceField.optional(),
+  price_egp: nullablePriceField.optional(),
+  translations: addonTranslationsSchema.optional(),
 });
 
 // rooms and addons also arrive as JSON strings in multipart/form-data
@@ -96,41 +106,112 @@ function parseJsonArray(value: string): unknown[] | null {
   }
 }
 
-const roomWriteRowsField = z.string().transform((value, ctx) => {
-  const rows = parseJsonArray(value);
-  if (!rows) {
-    ctx.addIssue({ code: 'custom', message: 'rooms يجب أن تكون مصفوفة JSON' });
-    return z.NEVER;
-  }
-  return rows.map((row, index) => {
-    const schema =
-      typeof row === 'object' && row !== null && 'id' in row
-        ? roomUpdateRowSchema
-        : roomInputSchema;
-    const result = schema.safeParse(row);
-    if (result.success) return result.data;
-    for (const issue of result.error.issues) {
+// Rows with an `id` use the update schema, rows without one the create schema.
+function writeRowsField<C extends z.ZodTypeAny, U extends z.ZodTypeAny>(
+  name: string,
+  createSchema: C,
+  updateSchema: U,
+) {
+  return z.string().transform((value, ctx) => {
+    const rows = parseJsonArray(value);
+    if (!rows) {
       ctx.addIssue({
         code: 'custom',
-        path: [index, ...issue.path],
-        message: issue.message,
+        message: `${name} يجب أن تكون مصفوفة JSON`,
       });
+      return z.NEVER;
     }
+    return rows.map((row, index): z.output<C> | z.output<U> => {
+      const schema =
+        typeof row === 'object' && row !== null && 'id' in row
+          ? updateSchema
+          : createSchema;
+      const result = schema.safeParse(row);
+      if (result.success) return result.data as z.output<C> | z.output<U>;
+      for (const issue of result.error.issues) {
+        ctx.addIssue({
+          code: 'custom',
+          path: [index, ...issue.path],
+          message: issue.message,
+        });
+      }
+      return z.NEVER;
+    });
+  });
+}
+
+function deleteIdsField(name: string, label: string) {
+  return z.string().transform((value, ctx) => {
+    const result = z
+      .array(uuidLike.toLowerCase())
+      .safeParse(parseJsonArray(value));
+    if (result.success) return result.data;
+    ctx.addIssue({
+      code: 'custom',
+      message: `${name} يجب أن تكون مصفوفة JSON من معرّفات ${label}`,
+    });
     return z.NEVER;
   });
-});
+}
 
-const deleteRoomIdsField = z.string().transform((value, ctx) => {
-  const result = z
-    .array(uuidLike.toLowerCase())
-    .safeParse(parseJsonArray(value));
-  if (result.success) return result.data;
-  ctx.addIssue({
-    code: 'custom',
-    message: 'delete_room_ids يجب أن تكون مصفوفة JSON من معرّفات الغرف',
-  });
-  return z.NEVER;
-});
+const writeModeField = (name: string) =>
+  z
+    .enum(['by_id', ''], `القيمة المسموحة لـ ${name} هي by_id فقط`)
+    .transform((mode) => mode || undefined)
+    .optional();
+
+type IdWriteCheck = {
+  rows: object[] | undefined;
+  mode: 'by_id' | undefined;
+  deleteIds: string[] | undefined;
+  rowsField: string;
+  modeField: string;
+  deleteField: string;
+  noun: string;
+};
+
+function idWriteIssues(
+  check: IdWriteCheck,
+): { path: string[]; message: string }[] {
+  const issues: { path: string[]; message: string }[] = [];
+  const issue = (field: string, message: string) =>
+    issues.push({ path: [field], message });
+  const editedIds = (check.rows ?? []).flatMap((row) =>
+    'id' in row && typeof row.id === 'string' ? [row.id] : [],
+  );
+  const deleteIds = check.deleteIds ?? [];
+  if (check.mode !== 'by_id') {
+    if (check.deleteIds !== undefined)
+      issue(
+        check.deleteField,
+        `${check.deleteField} يتطلب ${check.modeField}=by_id`,
+      );
+    if (editedIds.length)
+      issue(
+        check.modeField,
+        `تعديل ${check.noun} بمعرّفاتها يتطلب ${check.modeField}=by_id`,
+      );
+    return issues;
+  }
+  if (new Set(editedIds).size !== editedIds.length)
+    issue(check.rowsField, 'لا يجوز تكرار المعرّف نفسه');
+  if (new Set(deleteIds).size !== deleteIds.length)
+    issue(check.deleteField, 'لا يجوز تكرار المعرّف نفسه');
+  if (deleteIds.some((id) => editedIds.includes(id)))
+    issue(check.deleteField, 'لا يمكن تعديل عنصر وحذفه في الطلب نفسه');
+  return issues;
+}
+
+const roomWriteRowsField = writeRowsField(
+  'rooms',
+  roomInputSchema,
+  roomUpdateRowSchema,
+);
+const addonWriteRowsField = writeRowsField(
+  'addons',
+  addonInputSchema,
+  addonUpdateRowSchema,
+);
 
 export const hotelValidationSchema = z
   .object({
@@ -252,42 +333,37 @@ export const updateHotelValidationSchema = z
     youtube_video_url: z.union([z.string().url(), z.literal('')]).optional(),
     translations: translationsField.optional(),
     rooms: roomWriteRowsField.optional(),
-    rooms_write_mode: z
-      .enum(['by_id', ''], 'القيمة المسموحة لـ rooms_write_mode هي by_id فقط')
-      .transform((mode) => mode || undefined)
-      .optional(),
-    delete_room_ids: deleteRoomIdsField.optional(),
-    addons: addonsField,
+    rooms_write_mode: writeModeField('rooms_write_mode'),
+    delete_room_ids: deleteIdsField('delete_room_ids', 'الغرف').optional(),
+    addons: addonWriteRowsField.optional(),
+    addons_write_mode: writeModeField('addons_write_mode'),
+    delete_addon_ids: deleteIdsField('delete_addon_ids', 'الترقيات').optional(),
     deleteAssetIds: z
       .union([z.array(uuidLike), uuidLike.transform((v) => [v])])
       .optional(),
   })
   .transform((hotel, ctx) => {
-    const issue = (field: string, message: string) =>
-      ctx.addIssue({ code: 'custom', path: [field], message });
-    const editedIds = (hotel.rooms ?? []).flatMap((row) =>
-      'id' in row ? [row.id] : [],
-    );
-    const deleteIds = hotel.delete_room_ids ?? [];
-    if (hotel.rooms_write_mode !== 'by_id') {
-      if (hotel.delete_room_ids !== undefined)
-        issue(
-          'delete_room_ids',
-          'delete_room_ids يتطلب rooms_write_mode=by_id',
-        );
-      if (editedIds.length)
-        issue(
-          'rooms_write_mode',
-          'تعديل الغرف بمعرّفاتها يتطلب rooms_write_mode=by_id',
-        );
-      return hotel;
-    }
-    if (new Set(editedIds).size !== editedIds.length)
-      issue('rooms', 'لا يجوز تكرار معرّف الغرفة');
-    if (new Set(deleteIds).size !== deleteIds.length)
-      issue('delete_room_ids', 'لا يجوز تكرار معرّف الغرفة');
-    if (deleteIds.some((roomId) => editedIds.includes(roomId)))
-      issue('delete_room_ids', 'لا يمكن تعديل غرفة وحذفها في الطلب نفسه');
+    const issues = [
+      ...idWriteIssues({
+        rows: hotel.rooms,
+        mode: hotel.rooms_write_mode,
+        deleteIds: hotel.delete_room_ids,
+        rowsField: 'rooms',
+        modeField: 'rooms_write_mode',
+        deleteField: 'delete_room_ids',
+        noun: 'الغرف',
+      }),
+      ...idWriteIssues({
+        rows: hotel.addons,
+        mode: hotel.addons_write_mode,
+        deleteIds: hotel.delete_addon_ids,
+        rowsField: 'addons',
+        modeField: 'addons_write_mode',
+        deleteField: 'delete_addon_ids',
+        noun: 'الترقيات',
+      }),
+    ];
+    for (const issue of issues) ctx.addIssue({ code: 'custom', ...issue });
     return hotel;
   });
 

@@ -5,6 +5,8 @@ import {
 } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import {
+  AddonInput,
+  AddonUpdateInput,
   CreateHotelDto,
   RoomInput,
   RoomUpdateInput,
@@ -18,18 +20,28 @@ import { removeFields } from '../utils/object.util';
 import { getDiscountPriceIssues, throwPriceIssues } from '../utils/price.util';
 import { HOTEL_CATALOG_INCLUDE } from './util/hotel-catalog';
 import {
+  addonIdsRequired,
   invalidInput,
   roomIdsRequired,
 } from '../hotel-availability/util/availability.errors';
 
-type RoomWriteRequest = Pick<
+type CatalogWriteRequest = Pick<
   UpdateHotelRequest,
-  'rooms' | 'rooms_write_mode' | 'delete_room_ids'
+  | 'rooms'
+  | 'rooms_write_mode'
+  | 'delete_room_ids'
+  | 'addons'
+  | 'addons_write_mode'
+  | 'delete_addon_ids'
 >;
 
 const isExistingRoom = (
   row: RoomInput | RoomUpdateInput,
 ): row is RoomUpdateInput => 'id' in row;
+
+const isExistingAddon = (
+  row: AddonInput | AddonUpdateInput,
+): row is AddonUpdateInput => 'id' in row;
 
 @Injectable()
 export class HotelService {
@@ -82,21 +94,7 @@ export class HotelService {
 
       if (addons?.length) {
         for (const addon of addons) {
-          const addonId = randomUUID();
-          const { translations: addonTranslations, price, price_egp } = addon;
-          await tx.hotelAddon.create({
-            data: {
-              id: addonId,
-              hotel_id: hotelId,
-              price,
-              price_egp,
-            },
-          });
-          for (const t of addonTranslations) {
-            await tx.hotelAddonTranslation.create({
-              data: { addon_id: addonId, ...t },
-            });
-          }
+          await this.createAddon(tx, hotelId, addon);
         }
       }
 
@@ -186,6 +184,8 @@ export class HotelService {
       rooms_write_mode,
       delete_room_ids,
       addons,
+      addons_write_mode,
+      delete_addon_ids,
       ...rest
     } = updateHotelDto;
 
@@ -210,12 +210,20 @@ export class HotelService {
       .map((a) => a.fileId);
 
     await this.prismaService.$transaction(async (tx) => {
-      if (rooms !== undefined || delete_room_ids !== undefined) {
-        await this.lockRoomChanges(tx, id, {
-          rooms,
-          rooms_write_mode,
-          delete_room_ids,
-        });
+      const catalogWrite = {
+        rooms,
+        rooms_write_mode,
+        delete_room_ids,
+        addons,
+        addons_write_mode,
+        delete_addon_ids,
+      };
+      if (
+        [rooms, delete_room_ids, addons, delete_addon_ids].some(
+          (field) => field !== undefined,
+        )
+      ) {
+        await this.lockCatalogChanges(tx, id, catalogWrite);
       }
 
       if (deleteAssetIds?.length) {
@@ -276,29 +284,19 @@ export class HotelService {
         );
       }
 
-      if (addons !== undefined) {
-        const existingAddons = await tx.hotelAddon.findMany({
-          where: { hotel_id: id },
-          select: { id: true },
-        });
-        if (existingAddons.length) {
-          await tx.hotelAddonTranslation.deleteMany({
-            where: { addon_id: { in: existingAddons.map((a) => a.id) } },
-          });
-          await tx.hotelAddon.deleteMany({ where: { hotel_id: id } });
-        }
-        for (const addon of addons) {
-          const addonId = randomUUID();
-          const { translations: addonTranslations, price, price_egp } = addon;
-          await tx.hotelAddon.create({
-            data: { id: addonId, hotel_id: id, price, price_egp },
-          });
-          for (const t of addonTranslations) {
-            await tx.hotelAddonTranslation.create({
-              data: { addon_id: addonId, ...t },
-            });
-          }
-        }
+      if (addons_write_mode === 'by_id') {
+        await this.writeAddonsById(
+          tx,
+          id,
+          addons ?? [],
+          delete_addon_ids ?? [],
+        );
+      } else if (addons !== undefined) {
+        await this.replaceAddons(
+          tx,
+          id,
+          addons.filter((row): row is AddonInput => !isExistingAddon(row)),
+        );
       }
 
       if (files?.mainImages?.length || files?.subImages?.length) {
@@ -343,29 +341,124 @@ export class HotelService {
     });
   }
 
-  // Room writes lock the hotel row first; calendar writes do the same, so the two never deadlock.
-  private async lockRoomChanges(
+  // Room and add-on writes lock the hotel row first; calendar writes do the same, so the two never deadlock.
+  private async lockCatalogChanges(
     tx: Prisma.TransactionClient,
     hotelId: string,
-    request: RoomWriteRequest,
+    request: CatalogWriteRequest,
   ) {
     const [hotel] = await tx.$queryRaw<{ calendar_managed_at: Date | null }[]>`
       SELECT calendar_managed_at FROM hotels WHERE id = ${hotelId} FOR UPDATE
     `;
-    if (request.rooms_write_mode !== 'by_id') {
-      if (hotel?.calendar_managed_at) throw roomIdsRequired();
-      return;
+    const managed = Boolean(hotel?.calendar_managed_at);
+    if (request.rooms_write_mode === 'by_id') {
+      const editedIds = (request.rooms ?? [])
+        .filter(isExistingRoom)
+        .map((row) => row.id);
+      await this.assertActiveRooms(tx, hotelId, editedIds, 'rooms');
+      await this.assertActiveRooms(
+        tx,
+        hotelId,
+        request.delete_room_ids ?? [],
+        'delete_room_ids',
+      );
+    } else if (request.rooms !== undefined && managed) {
+      throw roomIdsRequired();
     }
-    const editedIds = (request.rooms ?? [])
-      .filter(isExistingRoom)
-      .map((row) => row.id);
-    await this.assertActiveRooms(tx, hotelId, editedIds, 'rooms');
-    await this.assertActiveRooms(
-      tx,
-      hotelId,
-      request.delete_room_ids ?? [],
-      'delete_room_ids',
-    );
+    if (request.addons_write_mode === 'by_id') {
+      const editedIds = (request.addons ?? [])
+        .filter(isExistingAddon)
+        .map((row) => row.id);
+      await this.assertActiveAddons(tx, hotelId, editedIds, 'addons');
+      await this.assertActiveAddons(
+        tx,
+        hotelId,
+        request.delete_addon_ids ?? [],
+        'delete_addon_ids',
+      );
+    } else if (request.addons !== undefined && managed) {
+      throw addonIdsRequired();
+    }
+  }
+
+  private async assertActiveAddons(
+    tx: Prisma.TransactionClient,
+    hotelId: string,
+    addonIds: string[],
+    field: string,
+  ) {
+    if (!addonIds.length) return;
+    const found = await tx.hotelAddon.count({
+      where: { id: { in: addonIds }, hotel_id: hotelId, is_deleted: false },
+    });
+    if (found !== addonIds.length)
+      throw invalidInput(field, 'معرّف ترقية غير صالح لهذا الفندق');
+  }
+
+  private async replaceAddons(
+    tx: Prisma.TransactionClient,
+    hotelId: string,
+    addons: AddonInput[],
+  ) {
+    await tx.hotelAddon.updateMany({
+      where: { hotel_id: hotelId, is_deleted: false },
+      data: { is_deleted: true },
+    });
+    for (const addon of addons) await this.createAddon(tx, hotelId, addon);
+  }
+
+  private async writeAddonsById(
+    tx: Prisma.TransactionClient,
+    hotelId: string,
+    rows: (AddonInput | AddonUpdateInput)[],
+    deleteIds: string[],
+  ) {
+    for (const row of rows) {
+      if (isExistingAddon(row)) await this.updateAddon(tx, row);
+      else await this.createAddon(tx, hotelId, row);
+    }
+    if (deleteIds.length) {
+      await tx.hotelAddon.updateMany({
+        where: { id: { in: deleteIds }, hotel_id: hotelId },
+        data: { is_deleted: true },
+      });
+    }
+  }
+
+  private async createAddon(
+    tx: Prisma.TransactionClient,
+    hotelId: string,
+    addon: AddonInput,
+  ) {
+    const addonId = randomUUID();
+    const { translations, price, price_egp } = addon;
+    await tx.hotelAddon.create({
+      data: { id: addonId, hotel_id: hotelId, price, price_egp },
+    });
+    for (const translation of translations) {
+      await tx.hotelAddonTranslation.create({
+        data: { addon_id: addonId, ...translation },
+      });
+    }
+  }
+
+  private async updateAddon(
+    tx: Prisma.TransactionClient,
+    { id, translations, ...fields }: AddonUpdateInput,
+  ) {
+    await tx.hotelAddon.update({ where: { id }, data: fields });
+    for (const translation of translations ?? []) {
+      await tx.hotelAddonTranslation.upsert({
+        where: {
+          addon_id_language: { addon_id: id, language: translation.language },
+        },
+        update: {
+          name: translation.name,
+          description: translation.description,
+        },
+        create: { addon_id: id, ...translation },
+      });
+    }
   }
 
   private async assertActiveRooms(

@@ -424,12 +424,24 @@ export const UpdateHotelSwagger = () =>
             description:
               'JSON string - معرّفات غرف لأرشفتها (يتطلب rooms_write_mode=by_id)',
           },
+          addons_write_mode: {
+            type: 'string',
+            enum: ['by_id'],
+            description:
+              'by_id: تصبح addons مصفوفة upsert (صف فيه id يعدّل تلك الترقية، وصف بدون id ينشئ ترقية، والترقيات غير المذكورة تبقى). بدونها: إرسال addons يستبدل كل الترقيات (تُؤرشف القديمة)، ويُرفض بـ 409 ADDON_IDS_REQUIRED إذا بدأ الفندق استخدام التقويم. عدم إرسال addons يُبقيها كما هي',
+          },
           addons: {
             type: 'string',
             example:
-              '[{"price":50,"price_egp":500,"translations":[{"language":"ar","name":"إفطار","description":"وجبة إفطار فاخرة"},{"language":"en","name":"Breakfast","description":"Luxury breakfast"}]}]',
+              '[{"id":"cccccccc-0000-4000-8000-000000000001","price_egp":950},{"price":30,"price_egp":1200,"translations":[{"language":"ar","name":"عشاء رومانسي","description":"عشاء على الشاطئ"}]}]',
             description:
-              'JSON string - الإضافات (اختياري). إرسالها يستبدل الإضافات الحالية، ومصفوفة فارغة تحذفها، وعدم إرسالها يُبقيها (اختياري). كل إضافة تحتوي: price, price_egp, translations[]',
+              'JSON string - الترقيات (اختياري). صف بدون id يحتاج price, price_egp, translations. صف فيه id (مع addons_write_mode=by_id فقط) كل حقوله اختيارية: price, price_egp, translations',
+          },
+          delete_addon_ids: {
+            type: 'string',
+            example: '["cccccccc-0000-4000-8000-000000000001"]',
+            description:
+              'JSON string - معرّفات ترقيات لأرشفتها (يتطلب addons_write_mode=by_id)',
           },
           'deleteAssetIds[0]': {
             type: 'string',
@@ -460,7 +472,7 @@ export const UpdateHotelSwagger = () =>
     ApiResponse({
       status: 409,
       description:
-        'ROOM_IDS_REQUIRED: استبدال الغرف بدون by_id لفندق يستخدم التقويم',
+        'ROOM_IDS_REQUIRED أو ADDON_IDS_REQUIRED: استبدال الغرف أو الترقيات بدون by_id لفندق يستخدم التقويم',
     }),
     ApiResponse({ status: 404, description: 'الفندق غير موجود' }),
   );
