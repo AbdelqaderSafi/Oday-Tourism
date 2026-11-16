@@ -23,7 +23,7 @@ export const GetRoomCalendarSwagger = () =>
   applyDecorators(
     ApiOperation({
       summary: 'تقويم غرفة: الوحدات المتاحة وأسعار كل ليلة',
-      description: `ليلة لكل تاريخ من from حتى ما قبل to (حتى ${LIMITS.maxCalendarRangeNights} ليلة)، مع revision والأسعار الأساسية. الليلة بلا سجل مغلقة. base_rates تكون null إذا لم يُحدد سعر أساسي موجب.`,
+      description: `ليلة لكل تاريخ من from حتى ما قبل to (حتى ${LIMITS.maxCalendarRangeNights} ليلة)، مع revision والأسعار الأساسية. available_units هو مفتاح فتح وإغلاق: 0 مغلقة وأي رقم موجب مفتوحة، والليلة بلا سجل مفتوحة (ترجع 1). base_rates تكون null إذا لم يُحدد سعر أساسي موجب.`,
     }),
     ...calendarParams(),
     ApiQuery({
@@ -79,7 +79,7 @@ export const UpdateRoomCalendarSwagger = () =>
   applyDecorators(
     ApiOperation({
       summary: 'تعديل تقويم غرفة دفعة واحدة',
-      description: `revision يجب أن يطابق آخر قراءة وإلا 409 CALENDAR_CONFLICT بلا أي حفظ. كل تغيير يغطي الليالي من from حتى ما قبل to، بين اليوم و${LIMITS.bookingWindowDays} يومًا بعده، ويحدد available_units (0-${LIMITS.maxAvailableUnits}) أو rate_override (USD/EGP، وnull يلغي السعر الخاص). الحقول غير المرسلة لا تتغير، و0 وحدات يغلق الليلة ويُبقي أسعارها. لا يجوز تداخل الفترات.`,
+      description: `revision يجب أن يطابق آخر قراءة وإلا 409 CALENDAR_CONFLICT بلا أي حفظ. كل تغيير يغطي الليالي من from حتى ما قبل to، بين اليوم و${LIMITS.bookingWindowDays} يومًا بعده، ويحدد available_units (0-${LIMITS.maxAvailableUnits}) أو rate_override (USD/EGP، وnull يلغي السعر الخاص). الحقول غير المرسلة لا تتغير، و0 يغلق الليلة ويُبقي أسعارها، وأي رقم موجب يفتحها (الرقم لا يحدد عدد الغرف). تعديل السعر وحده يُبقي حالة الليلة كما هي، والليلة بلا سجل مفتوحة. لا يجوز تداخل الفترات.`,
     }),
     ...calendarParams(),
     ApiBody({
@@ -161,7 +161,7 @@ export const SearchHotelStaysSwagger = () =>
   applyDecorators(
     ApiOperation({
       summary: 'البحث عن فنادق متاحة لتواريخ محددة',
-      description: `يرجع الفنادق التي يكفي مخزونها كل ليالي الإقامة مع أرخص توزيع غرف مقترح، مرتبة بمعرّف الفندق. ${STAY_RULES} pricing_status = ON_REQUEST وtotal = null إذا لم يتوفر سعر كامل.`,
+      description: `يرجع الفنادق التي تتسع غرفها المفتوحة طوال ليالي الإقامة للمجموعة (يمكن أخذ أكثر من غرفة من النوع نفسه) مع أرخص توزيع غرف مقترح، مرتبة بمعرّف الفندق. ${STAY_RULES} pricing_status = ON_REQUEST وtotal = null إذا لم يتوفر سعر كامل.`,
     }),
     ApiQuery({
       name: 'destination',

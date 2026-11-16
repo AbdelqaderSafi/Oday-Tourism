@@ -46,7 +46,6 @@ export async function loadRoomNights(
   roomIds: string[],
   from: string,
   to: string,
-  { openOnly }: { openOnly: boolean },
 ): Promise<RoomNights> {
   const nights: RoomNights = new Map();
   if (!roomIds.length) return nights;
@@ -59,7 +58,6 @@ export async function loadRoomNights(
     FROM room_calendar_days
     WHERE room_id IN (${Prisma.join(roomIds)})
       AND stay_date >= ${from} AND stay_date < ${to}
-      ${openOnly ? Prisma.sql`AND available_units > 0` : Prisma.empty}
   `;
   for (const row of rows) {
     const roomNights =

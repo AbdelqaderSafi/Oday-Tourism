@@ -69,17 +69,15 @@ export function roomStayTerms(
     unitRate:
       room.nights.get(date)?.overrides[currency] ?? room.baseRates[currency],
   }));
-  const fewestUnits = Math.min(
-    ...nights.map((date) => room.nights.get(date)?.availableUnits ?? 0),
+  // Units are an open/closed switch, not stock: a night without a row is open, 0 closes it.
+  const closed = nights.some(
+    (date) => (room.nights.get(date)?.availableUnits ?? 1) <= 0,
   );
   return {
     roomId: room.roomId,
     capacity: room.capacity,
-    // A type without a verified capacity is never offered, whatever its stock (spec 6.4).
-    maxQuantity:
-      nights.length && room.capacity >= 1
-        ? Math.max(0, Math.min(fewestUnits, guests))
-        : 0,
+    // A type without a verified capacity is never offered (spec 6.4).
+    maxQuantity: nights.length && room.capacity >= 1 && !closed ? guests : 0,
     unitStayTotal: sumOrNull(nightlyRates.map((night) => night.unitRate)),
     nightlyRates,
   };

@@ -90,23 +90,22 @@ describe('roomStayTerms', () => {
     );
   });
 
-  it('allows the smallest stock across the nights, capped at the party size', () => {
-    expect(roomStayTerms(double, nights, 5, 'EGP').maxQuantity).toBe(1);
-    const plenty: RoomTypeStock = {
-      ...double,
-      nights: new Map(nights.map((date) => [date, open(9)])),
-    };
-    expect(roomStayTerms(plenty, nights, 3, 'EGP').maxQuantity).toBe(3);
+  it('treats any positive units as open: the party size alone caps the quantity', () => {
+    expect(roomStayTerms(double, nights, 5, 'EGP').maxQuantity).toBe(5);
+    expect(roomStayTerms(family, nights, 6, 'EGP').maxQuantity).toBe(6);
   });
 
-  it('treats a missing night as closed and ignores the checkout date', () => {
-    expect(
-      roomStayTerms(double, ['2026-11-21', '2026-11-22'], 2, 'EGP').maxQuantity,
-    ).toBe(0);
+  it('treats a night without a row as open', () => {
+    const noRows: RoomTypeStock = { ...double, nights: new Map() };
+    expect(roomStayTerms(noRows, nights, 6, 'USD').maxQuantity).toBe(6);
+    expect(roomStayTerms(noRows, nights, 6, 'USD').unitStayTotal).toBe(20000);
+  });
+
+  it('closes the type when any stay night has 0 units, and ignores the checkout date', () => {
     expect(
       roomStayTerms(family, [...nights, '2026-11-22'], 3, 'EGP').maxQuantity,
     ).toBe(0);
-    expect(roomStayTerms(family, nights, 3, 'EGP').maxQuantity).toBe(1);
+    expect(roomStayTerms(family, nights, 3, 'EGP').maxQuantity).toBe(3);
   });
 
   it('never offers a room type without a verified capacity, however much stock it has', () => {

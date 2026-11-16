@@ -166,7 +166,7 @@ Interactive documentation is available at `/api/docs`.
 
 - **Tariff:** `visitor_category=egyptian-resident` prices in EGP and `other` in USD, with no conversion.
 - **Stay:** `check_in` today or later (Africa/Cairo), 1–30 nights, `check_out` within 365 days; adults ≥ 1 and at most 20 guests.
-- **Stock:** a room type is offered when it has a `capacity` (1–50) and at least one unit on every night; nights without a calendar row are closed. The nightly rate is that night's override, else the room's base price if above zero, else on request.
+- **Open/closed:** a room type with a `capacity` (1–50) is open on every night of the booking window unless an admin closes it. `available_units: 0` closes a night; any positive value means open and does not limit how many rooms a party may take (up to one room per guest). Nights without a calendar row are open, and a price-only edit leaves a night's state unchanged. The nightly rate is that night's override, else the room's base price if above zero, else on request.
 - **Recommendation:** the cheapest fully priced combination, then fewer rooms, then the lowest room IDs; otherwise the fewest rooms on request (`pricing_status: ON_REQUEST`, `total: null`).
 - **Room IDs:** `PATCH /hotel/:id` with `rooms_write_mode=by_id` updates rows that have an `id`, creates rows without one, and archives `delete_room_ids`. Once a hotel has a calendar write, replacing rooms without `by_id` returns `409 ROOM_IDS_REQUIRED`.
 - **Add-on IDs:** the same with `addons_write_mode=by_id` and `delete_addon_ids`. Without `by_id`, sending `addons` replaces them (old ones are archived), and returns `409 ADDON_IDS_REQUIRED` once the hotel has a calendar write. Omitting `addons` leaves them unchanged.

@@ -20,7 +20,8 @@ function calendarUpsert(roomId: string, change: CalendarChange): Prisma.Sql {
   const egp = change.rate_override?.EGP;
   const rows = stayNights(change.from, change.to).map(
     (date) =>
-      Prisma.sql`(${roomId}, ${date}, ${units ?? 0}, ${usd ?? null}, ${egp ?? null}, UTC_TIMESTAMP(3), UTC_TIMESTAMP(3))`,
+      // A price-only edit on a night without a row keeps it open, like every night without a row.
+      Prisma.sql`(${roomId}, ${date}, ${units ?? 1}, ${usd ?? null}, ${egp ?? null}, UTC_TIMESTAMP(3), UTC_TIMESTAMP(3))`,
   );
   const updates = [Prisma.sql`updated_at = UTC_TIMESTAMP(3)`];
   if (units !== undefined) updates.push(Prisma.sql`available_units = ${units}`);
@@ -44,13 +45,7 @@ export class RoomCalendarService {
   ): Promise<RoomCalendarResponse> {
     const room = await this.findRoom(hotelId, roomId);
     const nights = (
-      await loadRoomNights(
-        this.prismaService,
-        [room.id],
-        range.from,
-        range.to,
-        { openOnly: false },
-      )
+      await loadRoomNights(this.prismaService, [room.id], range.from, range.to)
     ).get(room.id);
     const base = baseRates(room);
     return {
@@ -65,7 +60,7 @@ export class RoomCalendarService {
         const night = nights?.get(date);
         return {
           date,
-          available_units: night?.availableUnits ?? 0,
+          available_units: night?.availableUnits ?? 1,
           rate_override: {
             USD: formatAmountOrNull(night?.overrides.USD ?? null),
             EGP: formatAmountOrNull(night?.overrides.EGP ?? null),
