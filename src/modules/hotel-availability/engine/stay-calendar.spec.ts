@@ -63,13 +63,29 @@ describe('nightOffers', () => {
     ).toEqual([25000, 29000]);
   });
 
-  it('marks a night closed when no allocation fits the party, and keeps the row', () => {
-    expect(nightOffers([double, family], [D3, '2026-11-23'], 5, 'EGP')).toEqual(
-      [
-        { date: D3, available: false, total: null },
-        { date: '2026-11-23', available: false, total: null },
-      ],
-    );
+  it('marks a night closed when every type is closed that night, and keeps the row', () => {
+    const closedOn = (room: RoomTypeStock, dates: string[]): RoomTypeStock => ({
+      ...room,
+      nights: new Map(dates.map((date) => [date, open(0)])),
+    });
+    const dates = [D3, '2026-11-23'];
+    expect(
+      nightOffers(
+        [closedOn(double, dates), closedOn(family, dates)],
+        dates,
+        5,
+        'EGP',
+      ),
+    ).toEqual([
+      { date: D3, available: false, total: null },
+      { date: '2026-11-23', available: false, total: null },
+    ]);
+  });
+
+  it('opens a night without a row and lets the party take several rooms of one type', () => {
+    expect(
+      nightOffers([{ ...family, nights: new Map() }], [D3], 6, 'USD'),
+    ).toEqual([{ date: D3, available: true, total: 30000 }]);
   });
 
   it('is available with a null total when every feasible allocation lacks a price', () => {

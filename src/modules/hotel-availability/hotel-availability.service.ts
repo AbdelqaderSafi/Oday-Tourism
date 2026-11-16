@@ -147,7 +147,6 @@ export class HotelAvailabilityService {
       roomIds,
       query.check_in,
       query.check_out,
-      { openOnly: true },
     );
     const offers = hotels.flatMap((hotel) => {
       const allocation = chooseAllocation(
@@ -218,7 +217,6 @@ export class HotelAvailabilityService {
       hotel.rooms.map((room) => room.id),
       body.check_in,
       body.check_out,
-      { openOnly: true },
     );
     const terms = availableTerms(hotel.rooms, roomNights, stay);
     const rooms = body.rooms
@@ -289,7 +287,6 @@ export class HotelAvailabilityService {
       hotel.rooms.map((room) => room.id),
       query.from,
       query.to,
-      { openOnly: true },
     );
     const offers = nightOffers(
       hotel.rooms.map((room) => toRoomStock(room, roomNights)),
