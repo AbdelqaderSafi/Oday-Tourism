@@ -11,6 +11,7 @@ import {
 } from './engine/room-allocation';
 import { stayNights } from './engine/stay-dates';
 import { nightOffers } from './engine/stay-calendar';
+import type { Party } from './engine/occupancy';
 import {
   Currency,
   priceStay,
@@ -40,14 +41,20 @@ import {
 } from './util/availability.queries';
 import { UUID_PATTERN } from './util/availability.validation';
 
-type StayRequest = {
+type PartyRequest = { adults: number; children: number; child_ages?: number[] };
+type StayRequest = PartyRequest & {
   check_in: string;
   check_out: string;
-  adults: number;
-  children: number;
   visitor_category: VisitorCategory;
 };
-type Stay = { nights: string[]; guests: number; currency: Currency };
+type Stay = { nights: string[]; party: Party; currency: Currency };
+
+// Ages are null only while REQUIRE_CHILD_AGES is off and the request carried none.
+const toParty = (request: PartyRequest): Party => ({
+  adults: request.adults,
+  children: request.children,
+  childAges: request.child_ages ?? (request.children === 0 ? [] : null),
+});
 type AddonPrice = {
   id: string;
   price: Prisma.Decimal;
@@ -56,7 +63,7 @@ type AddonPrice = {
 
 const toStay = (request: StayRequest): Stay => ({
   nights: stayNights(request.check_in, request.check_out),
-  guests: request.adults + request.children,
+  party: toParty(request),
   currency: VISITOR_CURRENCY[request.visitor_category],
 });
 
@@ -78,7 +85,7 @@ function availableTerms(
       roomStayTerms(
         toRoomStock(room, roomNights),
         stay.nights,
-        stay.guests,
+        stay.party.adults,
         stay.currency,
       ),
     )
@@ -89,18 +96,17 @@ function availableTerms(
 function exactRooms(
   selection: NonNullable<StayQuoteBody['rooms']>,
   terms: RoomStayTerms[],
-  guests: number,
+  party: Party,
 ): RoomPick[] {
   const rooms = selection
     .map(({ room_id, quantity }) => ({ roomId: room_id, quantity }))
     .sort((a, b) => compareIds(a.roomId, b.roomId));
-  if (!isSelectionFeasible(rooms, terms, guests))
-    throw stayUnavailable('rooms');
+  if (!isSelectionFeasible(rooms, terms, party)) throw stayUnavailable('rooms');
   return rooms;
 }
 
-function recommendedRooms(terms: RoomStayTerms[], guests: number): RoomPick[] {
-  const allocation = chooseAllocation(terms, guests);
+function recommendedRooms(terms: RoomStayTerms[], party: Party): RoomPick[] {
+  const allocation = chooseAllocation(terms, party);
   if (!allocation) throw stayUnavailable();
   return allocation.rooms;
 }
@@ -151,7 +157,7 @@ export class HotelAvailabilityService {
     const offers = hotels.flatMap((hotel) => {
       const allocation = chooseAllocation(
         availableTerms(hotel.rooms, roomNights, stay),
-        stay.guests,
+        stay.party,
       );
       return allocation ? [{ hotelId: hotel.id, allocation }] : [];
     });
@@ -220,8 +226,8 @@ export class HotelAvailabilityService {
     );
     const terms = availableTerms(hotel.rooms, roomNights, stay);
     const rooms = body.rooms
-      ? exactRooms(body.rooms, terms, stay.guests)
-      : recommendedRooms(terms, stay.guests);
+      ? exactRooms(body.rooms, terms, stay.party)
+      : recommendedRooms(terms, stay.party);
     const priced = priceStay(
       rooms,
       terms,
@@ -235,6 +241,7 @@ export class HotelAvailabilityService {
       check_out: body.check_out,
       adults: body.adults,
       children: body.children,
+      child_ages: body.child_ages ?? null,
       nights: stay.nights.length,
       visitor_category: body.visitor_category,
       currency: stay.currency,
@@ -291,7 +298,7 @@ export class HotelAvailabilityService {
     const offers = nightOffers(
       hotel.rooms.map((room) => toRoomStock(room, roomNights)),
       stayNights(query.from, query.to),
-      query.adults + query.children,
+      toParty(query),
       currency,
     );
     return {

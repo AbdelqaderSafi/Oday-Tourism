@@ -2,7 +2,12 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { DatabaseService } from '../database/database.service';
 import { CreateRoomDto, UpdateRoomDto } from './types/room.dto';
-import { Prisma } from 'generated/prisma/client';
+import { assertOccupancy } from '../utils/capacity.util';
+
+const withoutUndefined = <T extends object>(value: T) =>
+  Object.fromEntries(
+    Object.entries(value).filter(([, field]) => field !== undefined),
+  ) as Partial<T>;
 
 @Injectable()
 export class RoomService {
@@ -22,7 +27,7 @@ export class RoomService {
         data: {
           id: roomId,
           hotel_id: hotelId,
-          price: price as Prisma.Decimal,
+          price: price,
           ...rest,
         },
       });
@@ -63,13 +68,14 @@ export class RoomService {
     if (!room) throw new NotFoundException('الغرفة غير موجودة');
 
     const { translations, price, ...rest } = dto;
+    assertOccupancy({ ...room, ...withoutUndefined(rest) });
 
     return this.prismaService.$transaction(async (tx) => {
       await tx.room.update({
         where: { id },
         data: {
           ...rest,
-          ...(price !== undefined && { price: price as Prisma.Decimal }),
+          ...(price !== undefined && { price: price }),
         },
       });
 
@@ -79,7 +85,10 @@ export class RoomService {
             where: {
               room_id_language: { room_id: id, language: translation.language },
             },
-            update: { name: translation.name, description: translation.description },
+            update: {
+              name: translation.name,
+              description: translation.description,
+            },
             create: { room_id: id, ...translation },
           });
         }

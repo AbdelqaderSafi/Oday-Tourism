@@ -59,6 +59,7 @@ export type StayQuoteResponse = {
   check_out: string;
   adults: number;
   children: number;
+  child_ages: number[] | null;
   nights: number;
   visitor_category: VisitorCategory;
   currency: Currency;

@@ -1,17 +1,25 @@
 import type { Cents } from './money';
+import {
+  canHost,
+  HostUnit,
+  OccupancyLimits,
+  Party,
+  partyGuests,
+} from './occupancy';
 
 export type AllocationCandidate = {
   roomId: string;
   capacity: number;
   maxQuantity: number;
   unitStayTotal: Cents | null;
+  limits: OccupancyLimits;
 };
 
 export type RoomPick = { roomId: string; quantity: number };
 
 export type Allocation = { rooms: RoomPick[]; total: Cents | null };
 
-type Plan = { cost: Cents; rooms: RoomPick[] };
+type Plan = { rooms: RoomPick[]; count: number; cost: Cents };
 
 export function compareIds(a: string, b: string): number {
   if (a === b) return 0;
@@ -29,81 +37,91 @@ export function compareRoomPicks(a: RoomPick[], b: RoomPick[]): number {
   return a.length - b.length;
 }
 
-function isBetter(candidate: Plan, current: Plan | undefined): boolean {
-  if (!current) return true;
-  if (candidate.cost !== current.cost) return candidate.cost < current.cost;
-  return compareRoomPicks(candidate.rooms, current.rooms) < 0;
-}
+const unitsOf = (type: AllocationCandidate, quantity: number): HostUnit[] =>
+  Array.from({ length: quantity }, () => ({
+    capacity: type.capacity,
+    limits: type.limits,
+  }));
 
-// Dynamic programming over (guests covered, capped at the party) x (rooms used), with types in room_id order.
-// Keeping one best plan per cell is exact because ties are decided on the shared prefix.
-function cheapestCover(
+// Depth-first over types in room_id order, with q units of each. Ranking: cost (0 for the on-request pass),
+// then fewer rooms, then the stable room order. Every room needs an adult, so a plan has at most `adults` rooms.
+function bestPlan(
   candidates: AllocationCandidate[],
-  guests: number,
-  unitCost: (candidate: AllocationCandidate) => Cents,
+  party: Party,
+  unitCost: (type: AllocationCandidate) => Cents,
 ): Plan | null {
   const types = candidates
     .filter((candidate) => candidate.capacity > 0 && candidate.maxQuantity > 0)
     .sort((a, b) => compareIds(a.roomId, b.roomId));
-  let table = Array.from({ length: guests + 1 }, () =>
-    Array.from({ length: guests + 1 }, (): Plan | undefined => undefined),
-  );
-  table[0][0] = { cost: 0, rooms: [] };
-  for (const type of types) {
-    const next = table.map((row) => [...row]);
-    for (let covered = 0; covered <= guests; covered++) {
-      for (let used = 0; used < guests; used++) {
-        const plan = table[covered][used];
-        if (!plan) continue;
-        for (
-          let quantity = 1;
-          quantity <= type.maxQuantity && used + quantity <= guests;
-          quantity++
-        ) {
-          const reach = Math.min(guests, covered + quantity * type.capacity);
-          const candidate: Plan = {
-            cost: plan.cost + unitCost(type) * quantity,
-            rooms: [...plan.rooms, { roomId: type.roomId, quantity }],
-          };
-          if (isBetter(candidate, next[reach][used + quantity]))
-            next[reach][used + quantity] = candidate;
-        }
-      }
-    }
-    table = next;
-  }
+  const maxRooms = Math.min(party.adults, partyGuests(party));
   let best: Plan | null = null;
-  for (let used = 1; used <= guests; used++) {
-    const plan = table[guests][used];
-    if (plan && (!best || plan.cost < best.cost)) best = plan;
-  }
+  const picks: RoomPick[] = [];
+  const units: HostUnit[] = [];
+  const isBetter = (plan: Plan) =>
+    !best || plan.cost !== best.cost
+      ? !best || plan.cost < best.cost
+      : plan.count !== best.count
+        ? plan.count < best.count
+        : compareRoomPicks(plan.rooms, best.rooms) < 0;
+
+  const visit = (index: number, cost: Cents, count: number, room: number) => {
+    if (
+      best &&
+      (cost > best.cost || (cost === best.cost && count > best.count))
+    )
+      return;
+    if (index === types.length) {
+      if (count < 1 || room < partyGuests(party)) return;
+      const plan = { rooms: [...picks], count, cost };
+      if (isBetter(plan) && canHost(units, party)) best = plan;
+      return;
+    }
+    const type = types[index];
+    visit(index + 1, cost, count, room);
+    for (
+      let quantity = 1;
+      quantity <= type.maxQuantity && count + quantity <= maxRooms;
+      quantity++
+    ) {
+      picks.push({ roomId: type.roomId, quantity });
+      units.push(...unitsOf(type, quantity));
+      visit(
+        index + 1,
+        cost + unitCost(type) * quantity,
+        count + quantity,
+        room + type.capacity * quantity,
+      );
+      units.length -= quantity;
+      picks.pop();
+    }
+  };
+  visit(0, 0, 0, 0);
   return best;
 }
 
 export function chooseAllocation(
   candidates: AllocationCandidate[],
-  guests: number,
+  party: Party,
 ): Allocation | null {
-  const priced = cheapestCover(
+  const priced = bestPlan(
     candidates.filter((candidate) => candidate.unitStayTotal !== null),
-    guests,
+    party,
     (candidate) => candidate.unitStayTotal ?? 0,
   );
   if (priced) return { rooms: priced.rooms, total: priced.cost };
-  const onRequest = cheapestCover(candidates, guests, () => 0);
+  const onRequest = bestPlan(candidates, party, () => 0);
   return onRequest ? { rooms: onRequest.rooms, total: null } : null;
 }
 
 export function isSelectionFeasible(
   rooms: RoomPick[],
   candidates: AllocationCandidate[],
-  guests: number,
+  party: Party,
 ): boolean {
   const candidatesById = new Map(
     candidates.map((candidate) => [candidate.roomId, candidate]),
   );
-  let capacity = 0;
-  let count = 0;
+  const units: HostUnit[] = [];
   for (const { roomId, quantity } of rooms) {
     const candidate = candidatesById.get(roomId);
     if (
@@ -113,8 +131,7 @@ export function isSelectionFeasible(
       quantity > candidate.maxQuantity
     )
       return false;
-    capacity += candidate.capacity * quantity;
-    count += quantity;
+    units.push(...unitsOf(candidate, quantity));
   }
-  return count >= 1 && count <= guests && capacity >= guests;
+  return canHost(units, party);
 }

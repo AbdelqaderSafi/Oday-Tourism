@@ -1,4 +1,5 @@
 import { Cents, parseAmount } from './money';
+import type { OccupancyLimits } from './occupancy';
 import type { RoomPick } from './room-allocation';
 
 export type Currency = 'USD' | 'EGP';
@@ -15,6 +16,7 @@ export type CalendarNight = { availableUnits: number; overrides: Rates };
 export type RoomTypeStock = {
   roomId: string;
   capacity: number;
+  limits: OccupancyLimits;
   baseRates: Rates;
   nights: ReadonlyMap<string, CalendarNight>;
 };
@@ -24,6 +26,7 @@ export type NightlyRate = { date: string; unitRate: Cents | null };
 export type RoomStayTerms = {
   roomId: string;
   capacity: number;
+  limits: OccupancyLimits;
   maxQuantity: number;
   unitStayTotal: Cents | null;
   nightlyRates: NightlyRate[];
@@ -61,7 +64,7 @@ function sumOrNull(values: (Cents | null)[]): Cents | null {
 export function roomStayTerms(
   room: RoomTypeStock,
   nights: string[],
-  guests: number,
+  maxRooms: number,
   currency: Currency,
 ): RoomStayTerms {
   const nightlyRates = nights.map((date) => ({
@@ -76,8 +79,9 @@ export function roomStayTerms(
   return {
     roomId: room.roomId,
     capacity: room.capacity,
-    // A type without a verified capacity is never offered (spec 6.4).
-    maxQuantity: nights.length && room.capacity >= 1 && !closed ? guests : 0,
+    limits: room.limits,
+    // A type without a verified capacity is never offered (spec 6.4); every room needs an adult, so maxRooms is the adult count.
+    maxQuantity: nights.length && room.capacity >= 1 && !closed ? maxRooms : 0,
     unitStayTotal: sumOrNull(nightlyRates.map((night) => night.unitRate)),
     nightlyRates,
   };
