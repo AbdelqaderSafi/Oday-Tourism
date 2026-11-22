@@ -7,7 +7,11 @@ import {
   nullablePriceField,
   priceField,
 } from 'src/modules/utils/price.util';
-import { capacityField } from 'src/modules/utils/capacity.util';
+import {
+  capacityField,
+  occupancyIssues,
+  occupancyLimitFields,
+} from 'src/modules/utils/capacity.util';
 
 // Zod v4 uuid() is overly strict with version/variant bits.
 // Also trim whitespace/newlines that multipart/form-data can append to field values.
@@ -43,19 +47,31 @@ const roomTranslationsSchema = z
   .min(1)
   .max(2);
 
-const roomInputSchema = z.object({
-  price: priceField,
-  price_egp: priceField,
-  capacity: capacityField.optional(),
-  translations: roomTranslationsSchema,
-});
+const roomInputSchema = z
+  .object({
+    price: priceField,
+    price_egp: priceField,
+    capacity: capacityField.optional(),
+    ...occupancyLimitFields,
+    translations: roomTranslationsSchema,
+  })
+  .superRefine((room, ctx) => {
+    for (const issue of occupancyIssues(room))
+      ctx.addIssue({
+        code: 'custom',
+        path: [issue.field],
+        message: issue.message,
+      });
+  });
 
 // by_id rows: a row with an id edits that room type; a row without one creates a type.
+// Cross-field limits on an edited row are checked in HotelService against the stored values.
 const roomUpdateRowSchema = z.object({
   id: uuidLike.toLowerCase(),
   price: priceField.optional(),
   price_egp: nullablePriceField.optional(),
   capacity: capacityField.optional(),
+  ...occupancyLimitFields,
   translations: roomTranslationsSchema.optional(),
 });
 

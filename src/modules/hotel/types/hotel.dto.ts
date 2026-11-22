@@ -14,7 +14,15 @@ export type TranslationInput = {
   Facilities: Prisma.JsonValue;
 };
 
-export type RoomInput = {
+type RoomOccupancyLimits = {
+  adult_capacity?: number | null;
+  child_capacity?: number | null;
+  children_under_3_capacity?: number | null;
+  children_under_6_capacity?: number | null;
+  children_6_to_12_capacity?: number | null;
+};
+
+export type RoomInput = RoomOccupancyLimits & {
   price: Prisma.Decimal;
   price_egp: Prisma.Decimal;
   capacity?: number | null;
@@ -25,7 +33,7 @@ export type RoomInput = {
   }[];
 };
 
-export type RoomUpdateInput = {
+export type RoomUpdateInput = RoomOccupancyLimits & {
   id: string;
   price?: Prisma.Decimal;
   price_egp?: Prisma.Decimal | null;

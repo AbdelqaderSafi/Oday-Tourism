@@ -5,6 +5,7 @@ import {
   RoomTypeStock,
   toBaseRate,
 } from './stay-pricing';
+import { NO_LIMITS } from './occupancy';
 
 const open = (
   availableUnits: number,
@@ -19,6 +20,7 @@ const nights = ['2026-11-20', '2026-11-21'];
 const double: RoomTypeStock = {
   roomId: 'r_double',
   capacity: 2,
+  limits: NO_LIMITS,
   baseRates: { USD: 10000, EGP: 500000 },
   nights: new Map([
     ['2026-11-20', open(2)],
@@ -29,6 +31,7 @@ const double: RoomTypeStock = {
 const family: RoomTypeStock = {
   roomId: 'r_family',
   capacity: 3,
+  limits: NO_LIMITS,
   baseRates: { USD: 15000, EGP: 720000 },
   nights: new Map([
     ['2026-11-20', open(1)],

@@ -19,6 +19,7 @@ import { HotelQuery } from './types/hotel.types';
 import { removeFields } from '../utils/object.util';
 import { getDiscountPriceIssues, throwPriceIssues } from '../utils/price.util';
 import { HOTEL_CATALOG_INCLUDE } from './util/hotel-catalog';
+import { assertOccupancy } from '../utils/capacity.util';
 import {
   addonIdsRequired,
   invalidInput,
@@ -493,8 +494,9 @@ export class HotelService {
     rows: (RoomInput | RoomUpdateInput)[],
     deleteIds: string[],
   ) {
-    for (const row of rows) {
-      if (isExistingRoom(row)) await this.updateRoom(tx, row);
+    for (const [index, row] of rows.entries()) {
+      if (isExistingRoom(row))
+        await this.updateRoom(tx, row, `rooms.${index}.`);
       else await this.createRoom(tx, hotelId, row);
     }
     if (deleteIds.length) {
@@ -525,7 +527,23 @@ export class HotelService {
   private async updateRoom(
     tx: Prisma.TransactionClient,
     { id, translations, ...fields }: RoomUpdateInput,
+    fieldPrefix: string,
   ) {
+    const stored = await tx.room.findUniqueOrThrow({
+      where: { id },
+      select: {
+        capacity: true,
+        adult_capacity: true,
+        child_capacity: true,
+        children_under_3_capacity: true,
+        children_under_6_capacity: true,
+        children_6_to_12_capacity: true,
+      },
+    });
+    const changed = Object.fromEntries(
+      Object.entries(fields).filter(([, value]) => value !== undefined),
+    );
+    assertOccupancy({ ...stored, ...changed }, fieldPrefix);
     await tx.room.update({ where: { id }, data: fields });
     for (const translation of translations ?? []) {
       await tx.roomTranslation.upsert({

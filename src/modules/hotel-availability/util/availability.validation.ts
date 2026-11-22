@@ -176,6 +176,47 @@ function stayIssues(stay: StayFields): Issue[] {
   return issues;
 }
 
+// Missing ages are accepted until REQUIRE_CHILD_AGES=true: such children count only toward total and child limits.
+const requireChildAges = () => process.env.REQUIRE_CHILD_AGES === 'true';
+
+// Query strings carry ages as "2,7"; a malformed token becomes NaN and fails the range check below.
+const childAgesListField = z
+  .string()
+  .transform((value) =>
+    value.trim() === ''
+      ? []
+      : value
+          .split(',')
+          .map((token) => (/^\s*\d+\s*$/.test(token) ? Number(token) : NaN)),
+  )
+  .optional();
+
+const childAgesArrayField = z.array(z.number()).optional();
+
+function childAgeIssues(children: number, ages: number[] | undefined): Issue[] {
+  if (ages === undefined) {
+    return children > 0 && requireChildAges()
+      ? [{ path: ['child_ages'], message: 'أعمار الأطفال مطلوبة' }]
+      : [];
+  }
+  const issues: Issue[] = [];
+  if (ages.length !== children)
+    issues.push({
+      path: ['child_ages'],
+      message: 'عدد الأعمار يجب أن يساوي عدد الأطفال',
+    });
+  if (
+    ages.some(
+      (age) => !Number.isInteger(age) || age < 0 || age > LIMITS.maxChildAge,
+    )
+  )
+    issues.push({
+      path: ['child_ages'],
+      message: `كل عمر عدد صحيح من 0 إلى ${LIMITS.maxChildAge}`,
+    });
+  return issues;
+}
+
 export const staySearchQuerySchema = z
   .object({
     destination: z.enum(DestinatiosnEnum),
@@ -183,6 +224,7 @@ export const staySearchQuerySchema = z
     check_out: dateField,
     adults: z.coerce.number().int().min(1),
     children: z.coerce.number().int().min(0).default(0),
+    child_ages: childAgesListField,
     visitor_category: visitorCategoryField,
     page: z.coerce.number().int().min(1).default(1),
     limit: z.coerce
@@ -193,7 +235,10 @@ export const staySearchQuerySchema = z
       .default(LIMITS.defaultSearchPageSize),
   })
   .transform((query, ctx) => {
-    for (const issue of stayIssues(query))
+    for (const issue of [
+      ...stayIssues(query),
+      ...childAgeIssues(query.children, query.child_ages),
+    ])
       ctx.addIssue({ code: 'custom', ...issue });
     return query;
   });
@@ -233,6 +278,7 @@ export const stayQuoteBodySchema = z
     check_out: dateField,
     adults: z.number().int().min(1),
     children: z.number().int().min(0).default(0),
+    child_ages: childAgesArrayField,
     visitor_category: visitorCategoryField,
     rooms: z
       .array(z.object({ room_id: idField, quantity: quantityField }))
@@ -243,7 +289,11 @@ export const stayQuoteBodySchema = z
       .optional(),
   })
   .transform((body, ctx) => {
-    for (const issue of [...stayIssues(body), ...selectionIssues(body)])
+    for (const issue of [
+      ...stayIssues(body),
+      ...selectionIssues(body),
+      ...childAgeIssues(body.children, body.child_ages),
+    ])
       ctx.addIssue({ code: 'custom', ...issue });
     return body;
   });
@@ -254,9 +304,12 @@ export const stayCalendarQuerySchema = z
     to: dateField,
     adults: z.coerce.number().int().min(1),
     children: z.coerce.number().int().min(0).default(0),
+    child_ages: childAgesListField,
     visitor_category: visitorCategoryField,
   })
   .transform((query, ctx) => {
+    for (const ageIssue of childAgeIssues(query.children, query.child_ages))
+      ctx.addIssue({ code: 'custom', ...ageIssue });
     const today = hotelToday();
     const nights = daysBetween(query.from, query.to);
     const issue = (field: string, message: string) =>

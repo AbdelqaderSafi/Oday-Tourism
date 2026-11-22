@@ -28,6 +28,51 @@ export const CreateRoomSwagger = () =>
             description:
               'عدد الضيوف لكل وحدة من هذا النوع (اختياري). null أو نص فارغ يمسحها، والغرفة بلا سعة لا تظهر في البحث بالتواريخ',
           },
+          adult_capacity: {
+            type: 'integer',
+            minimum: 1,
+            maximum: 50,
+            nullable: true,
+            example: 2,
+            description:
+              'أقصى عدد بالغين في الغرفة (اختياري، null بلا حد إضافي، لا يتجاوز capacity)',
+          },
+          child_capacity: {
+            type: 'integer',
+            minimum: 0,
+            maximum: 50,
+            nullable: true,
+            example: 2,
+            description:
+              'أقصى عدد أطفال (0 يمنع الأطفال، null بلا حد إضافي، لا يتجاوز capacity)',
+          },
+          children_under_3_capacity: {
+            type: 'integer',
+            minimum: 0,
+            maximum: 50,
+            nullable: true,
+            example: 1,
+            description:
+              'أقصى عدد أطفال أعمارهم 0-2 (لا يتجاوز child_capacity)',
+          },
+          children_under_6_capacity: {
+            type: 'integer',
+            minimum: 0,
+            maximum: 50,
+            nullable: true,
+            example: 2,
+            description:
+              'أقصى عدد أطفال أعمارهم 0-5؛ الأقل من 3 يُحسبون هنا أيضًا (لا يتجاوز child_capacity)',
+          },
+          children_6_to_12_capacity: {
+            type: 'integer',
+            minimum: 0,
+            maximum: 50,
+            nullable: true,
+            example: 2,
+            description:
+              'أقصى عدد أطفال أعمارهم 6-12 شاملة (لا يتجاوز child_capacity)',
+          },
           translations: {
             type: 'array',
             items: {
@@ -106,6 +151,51 @@ export const UpdateRoomSwagger = () =>
             example: 2,
             description:
               'عدد الضيوف لكل وحدة من هذا النوع (اختياري). null أو نص فارغ يمسحها، والغرفة بلا سعة لا تظهر في البحث بالتواريخ',
+          },
+          adult_capacity: {
+            type: 'integer',
+            minimum: 1,
+            maximum: 50,
+            nullable: true,
+            example: 2,
+            description:
+              'أقصى عدد بالغين في الغرفة (اختياري، null بلا حد إضافي، لا يتجاوز capacity)',
+          },
+          child_capacity: {
+            type: 'integer',
+            minimum: 0,
+            maximum: 50,
+            nullable: true,
+            example: 2,
+            description:
+              'أقصى عدد أطفال (0 يمنع الأطفال، null بلا حد إضافي، لا يتجاوز capacity)',
+          },
+          children_under_3_capacity: {
+            type: 'integer',
+            minimum: 0,
+            maximum: 50,
+            nullable: true,
+            example: 1,
+            description:
+              'أقصى عدد أطفال أعمارهم 0-2 (لا يتجاوز child_capacity)',
+          },
+          children_under_6_capacity: {
+            type: 'integer',
+            minimum: 0,
+            maximum: 50,
+            nullable: true,
+            example: 2,
+            description:
+              'أقصى عدد أطفال أعمارهم 0-5؛ الأقل من 3 يُحسبون هنا أيضًا (لا يتجاوز child_capacity)',
+          },
+          children_6_to_12_capacity: {
+            type: 'integer',
+            minimum: 0,
+            maximum: 50,
+            nullable: true,
+            example: 2,
+            description:
+              'أقصى عدد أطفال أعمارهم 6-12 شاملة (لا يتجاوز child_capacity)',
           },
           translations: {
             type: 'array',

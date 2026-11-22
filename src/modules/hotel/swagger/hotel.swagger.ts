@@ -137,7 +137,7 @@ export const CreateHotelSwagger = () =>
             example:
               '[{"price":150,"price_egp":1500,"capacity":2,"translations":[{"language":"ar","name":"غرفة ديلوكس","description":"غرفة فاخرة مع إطلالة على البحر"},{"language":"en","name":"Deluxe Room","description":"Luxury room with sea view"}]}]',
             description:
-              'JSON string - مصفوفة الغرف (اختياري). كل غرفة تحتوي: price, price_egp, capacity (عدد الضيوف لكل وحدة 1-50، اختياري), translations[]',
+              'JSON string - مصفوفة الغرف (اختياري). كل غرفة تحتوي: price, price_egp, capacity (عدد الضيوف لكل وحدة 1-50، اختياري), adult_capacity, child_capacity, children_under_3_capacity, children_under_6_capacity, children_6_to_12_capacity (حدود اختيارية، null بلا حد إضافي), translations[]',
           },
           addons: {
             type: 'string',
@@ -416,7 +416,7 @@ export const UpdateHotelSwagger = () =>
             example:
               '[{"id":"9b2f1c7e-4d3a-4f6b-8a1e-2c5d7f9e0a13","capacity":3,"translations":[{"language":"en","name":"Family Room"}]},{"price":150,"price_egp":1500,"capacity":2,"translations":[{"language":"ar","name":"غرفة ديلوكس"}]}]',
             description:
-              'JSON string - الغرف (اختياري). صف بدون id يحتاج price, price_egp, translations ويقبل capacity. صف فيه id (مع by_id فقط) كل حقوله اختيارية: price, price_egp, capacity, translations',
+              'JSON string - الغرف (اختياري). صف بدون id يحتاج price, price_egp, translations ويقبل capacity. صف فيه id (مع by_id فقط) كل حقوله اختيارية: price, price_egp, capacity, حدود الإشغال الخمسة، translations. الحقل الغائب يبقى كما هو',
           },
           delete_room_ids: {
             type: 'string',

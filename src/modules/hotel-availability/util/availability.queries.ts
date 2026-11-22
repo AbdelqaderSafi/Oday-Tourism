@@ -13,6 +13,11 @@ export type RoomNights = Map<string, Map<string, CalendarNight>>;
 export type StockRoom = {
   id: string;
   capacity: number | null;
+  adult_capacity: number | null;
+  child_capacity: number | null;
+  children_under_3_capacity: number | null;
+  children_under_6_capacity: number | null;
+  children_6_to_12_capacity: number | null;
   price: Prisma.Decimal;
   price_egp: Prisma.Decimal | null;
 };
@@ -20,6 +25,11 @@ export type StockRoom = {
 export const STOCK_ROOM_SELECT = {
   id: true,
   capacity: true,
+  adult_capacity: true,
+  child_capacity: true,
+  children_under_3_capacity: true,
+  children_under_6_capacity: true,
+  children_6_to_12_capacity: true,
   price: true,
   price_egp: true,
 } satisfies Prisma.RoomSelect;
@@ -88,6 +98,13 @@ export function toRoomStock(
   return {
     roomId: room.id,
     capacity: room.capacity ?? 0,
+    limits: {
+      adults: room.adult_capacity,
+      children: room.child_capacity,
+      under3: room.children_under_3_capacity,
+      under6: room.children_under_6_capacity,
+      age6to12: room.children_6_to_12_capacity,
+    },
     baseRates: baseRates(room),
     nights: nights.get(room.id) ?? new Map(),
   };

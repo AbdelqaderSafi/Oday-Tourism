@@ -1,5 +1,12 @@
 import { chooseAllocation } from './room-allocation';
+import { NO_LIMITS, Party } from './occupancy';
 import { nightOffers } from './stay-calendar';
+
+const adults = (count: number): Party => ({
+  adults: count,
+  children: 0,
+  childAges: [],
+});
 import {
   CalendarNight,
   priceStay,
@@ -22,6 +29,7 @@ const D3 = '2026-11-22';
 const double: RoomTypeStock = {
   roomId: 'r_double',
   capacity: 2,
+  limits: NO_LIMITS,
   baseRates: { USD: 10000, EGP: 500000 },
   nights: new Map([
     [D1, open(1)],
@@ -33,6 +41,7 @@ const double: RoomTypeStock = {
 const family: RoomTypeStock = {
   roomId: 'r_family',
   capacity: 3,
+  limits: NO_LIMITS,
   baseRates: { USD: 15000, EGP: 720000 },
   nights: new Map([
     [D1, open(1)],
@@ -43,13 +52,14 @@ const family: RoomTypeStock = {
 const suiteNoEgp: RoomTypeStock = {
   roomId: 'r_suite',
   capacity: 4,
+  limits: NO_LIMITS,
   baseRates: { USD: 30000, EGP: null },
   nights: new Map([[D3, open(1)]]),
 };
 
 describe('nightOffers', () => {
   it('prices each night independently, with an override changing only its own night', () => {
-    expect(nightOffers([double, family], [D1, D2], 5, 'EGP')).toEqual([
+    expect(nightOffers([double, family], [D1, D2], adults(5), 'EGP')).toEqual([
       { date: D1, available: true, total: 1220000 },
       { date: D2, available: true, total: 1420000 },
     ]);
@@ -57,7 +67,7 @@ describe('nightOffers', () => {
 
   it('uses the independent USD tariff', () => {
     expect(
-      nightOffers([double, family], [D1, D2], 5, 'USD').map(
+      nightOffers([double, family], [D1, D2], adults(5), 'USD').map(
         (night) => night.total,
       ),
     ).toEqual([25000, 29000]);
@@ -73,7 +83,7 @@ describe('nightOffers', () => {
       nightOffers(
         [closedOn(double, dates), closedOn(family, dates)],
         dates,
-        5,
+        adults(5),
         'EGP',
       ),
     ).toEqual([
@@ -84,28 +94,28 @@ describe('nightOffers', () => {
 
   it('opens a night without a row and lets the party take several rooms of one type', () => {
     expect(
-      nightOffers([{ ...family, nights: new Map() }], [D3], 6, 'USD'),
+      nightOffers([{ ...family, nights: new Map() }], [D3], adults(6), 'USD'),
     ).toEqual([{ date: D3, available: true, total: 30000 }]);
   });
 
   it('is available with a null total when every feasible allocation lacks a price', () => {
-    expect(nightOffers([suiteNoEgp], [D3], 4, 'EGP')).toEqual([
+    expect(nightOffers([suiteNoEgp], [D3], adults(4), 'EGP')).toEqual([
       { date: D3, available: true, total: null },
     ]);
-    expect(nightOffers([suiteNoEgp], [D3], 4, 'USD')).toEqual([
+    expect(nightOffers([suiteNoEgp], [D3], adults(4), 'USD')).toEqual([
       { date: D3, available: true, total: 30000 },
     ]);
   });
 
   it('prefers a fully priced allocation over an unpriced one', () => {
-    expect(nightOffers([double, suiteNoEgp], [D3], 2, 'EGP')).toEqual([
+    expect(nightOffers([double, suiteNoEgp], [D3], adults(2), 'EGP')).toEqual([
       { date: D3, available: true, total: 500000 },
     ]);
   });
 
   it('never offers a room type without a capacity', () => {
     const unverified: RoomTypeStock = { ...double, capacity: 0 };
-    expect(nightOffers([unverified], [D1], 1, 'EGP')).toEqual([
+    expect(nightOffers([unverified], [D1], adults(1), 'EGP')).toEqual([
       { date: D1, available: false, total: null },
     ]);
   });
@@ -121,13 +131,13 @@ describe('nightOffers', () => {
       const terms = rooms
         .map((room) => roomStayTerms(room, [date], guests, currency))
         .filter((t) => t.maxQuantity >= 1);
-      const allocation = chooseAllocation(terms, guests);
+      const allocation = chooseAllocation(terms, adults(guests));
       const quoteTotal = allocation
         ? priceStay(allocation.rooms, terms, [], 1).total
         : null;
-      expect(nightOffers(rooms, [date], guests, currency)[0].total).toBe(
-        quoteTotal,
-      );
+      expect(
+        nightOffers(rooms, [date], adults(guests), currency)[0].total,
+      ).toBe(quoteTotal);
     }
   });
 });

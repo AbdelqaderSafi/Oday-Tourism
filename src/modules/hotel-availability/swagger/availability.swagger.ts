@@ -173,6 +173,12 @@ export const SearchHotelStaysSwagger = () =>
     ApiQuery({ name: 'adults', required: true, type: Number, example: 4 }),
     ApiQuery({ name: 'children', required: false, type: Number, example: 1 }),
     ApiQuery({
+      name: 'child_ages',
+      required: false,
+      example: '2,7',
+      description: 'أعمار الأطفال مفصولة بفواصل، عددها = children، كل عمر 0-12',
+    }),
+    ApiQuery({
       name: 'visitor_category',
       required: true,
       ...VISITOR_CATEGORY_DOC,
@@ -232,6 +238,12 @@ export const StayQuoteSwagger = () =>
           check_out: { type: 'string', example: '2026-11-22' },
           adults: { type: 'integer', minimum: 1, example: 4 },
           children: { type: 'integer', minimum: 0, example: 1 },
+          child_ages: {
+            type: 'array',
+            items: { type: 'integer', minimum: 0, maximum: 12 },
+            example: [7],
+            description: 'أعمار الأطفال، عددها = children',
+          },
           visitor_category: { type: 'string', ...VISITOR_CATEGORY_DOC },
           rooms: {
             type: 'array',
@@ -296,6 +308,12 @@ export const StayCalendarSwagger = () =>
     }),
     ApiQuery({ name: 'adults', required: true, type: Number, example: 2 }),
     ApiQuery({ name: 'children', required: false, type: Number, example: 0 }),
+    ApiQuery({
+      name: 'child_ages',
+      required: false,
+      example: '2,7',
+      description: 'أعمار الأطفال مفصولة بفواصل، عددها = children، كل عمر 0-12',
+    }),
     ApiQuery({
       name: 'visitor_category',
       required: true,

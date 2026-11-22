@@ -1,4 +1,5 @@
 import type { Cents } from './money';
+import type { Party } from './occupancy';
 import { chooseAllocation } from './room-allocation';
 import { Currency, roomStayTerms, RoomTypeStock } from './stay-pricing';
 
@@ -12,14 +13,14 @@ export type NightOffer = {
 export function nightOffers(
   rooms: RoomTypeStock[],
   dates: string[],
-  guests: number,
+  party: Party,
   currency: Currency,
 ): NightOffer[] {
   return dates.map((date) => {
     const terms = rooms
-      .map((room) => roomStayTerms(room, [date], guests, currency))
+      .map((room) => roomStayTerms(room, [date], party.adults, currency))
       .filter((roomTerms) => roomTerms.maxQuantity >= 1);
-    const allocation = chooseAllocation(terms, guests);
+    const allocation = chooseAllocation(terms, party);
     return {
       date,
       available: allocation !== null,
