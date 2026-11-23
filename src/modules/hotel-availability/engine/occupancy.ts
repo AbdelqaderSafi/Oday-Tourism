@@ -58,8 +58,8 @@ function maxFlow(capacity: number[][], source: number, sink: number): number {
 }
 
 // Can these room units hold the whole party, with at least one adult in every room?
-// One adult per room is placed first; the rest is a max-flow over each room's nested limits:
-// under-3 <= under3, under-3 + 3-5 <= under6, all children <= children, adults <= adults, everyone <= capacity.
+// One adult per room is placed first; the rest is a max-flow over each room's limits. The age bands are separate:
+// ages 0-2 <= under3, ages 3-5 <= under6, ages 6-12 <= age6to12, all children <= children, adults <= adults, everyone <= capacity.
 export function canHost(units: HostUnit[], party: Party): boolean {
   const rooms = units.length;
   if (rooms < 1 || party.adults < rooms) return false;
@@ -95,7 +95,7 @@ export function canHost(units: HostUnit[], party: Party): boolean {
     graph[adults][total] = cap(limits.adults) - 1;
     graph[children][total] = cap(limits.children);
     graph[under6][children] = cap(limits.under6);
-    graph[under3][under6] = cap(limits.under3);
+    graph[under3][children] = cap(limits.under3);
     graph[sixToTwelve][children] = cap(limits.age6to12);
     graph[2][adults] = BIG;
     graph[3][under3] = BIG;

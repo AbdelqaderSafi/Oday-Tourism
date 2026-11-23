@@ -62,7 +62,7 @@ export const CreateRoomSwagger = () =>
             nullable: true,
             example: 2,
             description:
-              'أقصى عدد أطفال أعمارهم 0-5؛ الأقل من 3 يُحسبون هنا أيضًا (لا يتجاوز child_capacity)',
+              'أقصى عدد أطفال أعمارهم 3-5 فقط؛ الأقل من 3 لهم حدّهم المستقل ولا يُحسبون هنا (لا يتجاوز child_capacity)',
           },
           children_6_to_12_capacity: {
             type: 'integer',
@@ -186,7 +186,7 @@ export const UpdateRoomSwagger = () =>
             nullable: true,
             example: 2,
             description:
-              'أقصى عدد أطفال أعمارهم 0-5؛ الأقل من 3 يُحسبون هنا أيضًا (لا يتجاوز child_capacity)',
+              'أقصى عدد أطفال أعمارهم 3-5 فقط؛ الأقل من 3 لهم حدّهم المستقل ولا يُحسبون هنا (لا يتجاوز child_capacity)',
           },
           children_6_to_12_capacity: {
             type: 'integer',
