@@ -64,7 +64,7 @@ function sumOrNull(values: (Cents | null)[]): Cents | null {
 export function roomStayTerms(
   room: RoomTypeStock,
   nights: string[],
-  maxRooms: number,
+  partyAdults: number,
   currency: Currency,
 ): RoomStayTerms {
   const nightlyRates = nights.map((date) => ({
@@ -76,12 +76,17 @@ export function roomStayTerms(
   const closed = nights.some(
     (date) => (room.nights.get(date)?.availableUnits ?? 1) <= 0,
   );
+  // A configured adult occupancy determines which parties see the type.
+  const eligible = partyAdults >= (room.limits.adults ?? 1);
   return {
     roomId: room.roomId,
     capacity: room.capacity,
     limits: room.limits,
-    // A type without a verified capacity is never offered (spec 6.4); every room needs an adult, so maxRooms is the adult count.
-    maxQuantity: nights.length && room.capacity >= 1 && !closed ? maxRooms : 0,
+    // Every selected room needs at least one adult.
+    maxQuantity:
+      nights.length && room.capacity >= 1 && !closed && eligible
+        ? partyAdults
+        : 0,
     unitStayTotal: sumOrNull(nightlyRates.map((night) => night.unitRate)),
     nightlyRates,
   };

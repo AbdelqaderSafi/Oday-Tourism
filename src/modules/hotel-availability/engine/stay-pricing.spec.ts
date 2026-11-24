@@ -6,6 +6,8 @@ import {
   toBaseRate,
 } from './stay-pricing';
 import { NO_LIMITS } from './occupancy';
+import { chooseAllocation, isSelectionFeasible } from './room-allocation';
+import { nightOffers } from './stay-calendar';
 
 const open = (
   availableUnits: number,
@@ -50,6 +52,85 @@ describe('toBaseRate', () => {
 });
 
 describe('roomStayTerms', () => {
+  const single: RoomTypeStock = {
+    ...double,
+    roomId: 'r_single',
+    limits: {
+      ...NO_LIMITS,
+      adults: 1,
+      children: 1,
+      under3: 1,
+      under6: 1,
+      age6to12: 1,
+    },
+    baseRates: { USD: 12500, EGP: null },
+    nights: new Map(),
+  };
+  const roomTypes = [
+    single,
+    { ...double, limits: { ...NO_LIMITS, adults: 2 } },
+    { ...family, limits: { ...NO_LIMITS, adults: 3 } },
+  ];
+
+  it.each([
+    {
+      adults: 1,
+      childAges: [7],
+      visible: ['r_single'],
+      recommended: 'r_single',
+    },
+    {
+      adults: 2,
+      childAges: [],
+      visible: ['r_single', 'r_double'],
+      recommended: 'r_double',
+    },
+    {
+      adults: 3,
+      childAges: [],
+      visible: ['r_single', 'r_double', 'r_family'],
+      recommended: 'r_family',
+    },
+  ])(
+    'offers $visible for $adults adults and children aged $childAges',
+    ({ adults, childAges, visible, recommended }) => {
+      const party = { adults, childAges, children: childAges.length };
+      const terms = roomTypes
+        .map((room) => roomStayTerms(room, [nights[0]], adults, 'USD'))
+        .filter((room) => room.maxQuantity > 0);
+
+      expect(terms.map((room) => room.roomId)).toEqual(visible);
+      const allocation = chooseAllocation(terms, party);
+      expect(allocation?.rooms).toEqual([{ roomId: recommended, quantity: 1 }]);
+      expect(nightOffers(roomTypes, [nights[0]], party, 'USD')[0]).toEqual({
+        date: nights[0],
+        available: true,
+        total: allocation?.total,
+      });
+    },
+  );
+
+  it('accepts a single for an adult and a child while rejecting a double or extra child', () => {
+    const terms = roomTypes.map((room) =>
+      roomStayTerms(room, nights, 1, 'USD'),
+    );
+    const party = { adults: 1, childAges: [7], children: 1 };
+
+    expect(
+      isSelectionFeasible([{ roomId: 'r_single', quantity: 1 }], terms, party),
+    ).toBe(true);
+    expect(
+      isSelectionFeasible([{ roomId: 'r_double', quantity: 1 }], terms, party),
+    ).toBe(false);
+    expect(
+      isSelectionFeasible([{ roomId: 'r_single', quantity: 1 }], terms, {
+        adults: 1,
+        childAges: [2, 7],
+        children: 2,
+      }),
+    ).toBe(false);
+  });
+
   it('prices each night from its override, else the base rate', () => {
     const terms = roomStayTerms(double, nights, 5, 'EGP');
     expect(terms.nightlyRates).toEqual([
