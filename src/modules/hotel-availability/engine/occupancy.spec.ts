@@ -49,7 +49,7 @@ function bruteForce(units: HostUnit[], p: Party): boolean {
         (g) => typeof g === 'number' && g >= 6,
       ).length;
       return (
-        adults >= 1 &&
+        mine.length >= 1 &&
         mine.length <= u.capacity &&
         adults <= unlimited(u.limits.adults) &&
         kids.length <= unlimited(u.limits.children) &&
@@ -117,9 +117,18 @@ describe('canHost', () => {
     expect(canHost([unit(4)], party(1, [0, 3, 12]))).toBe(true);
   });
 
-  it('requires at least one adult in every room', () => {
-    expect(canHost([unit(3), unit(3)], party(1, [7, 8, 9]))).toBe(false);
-    expect(canHost([unit(3), unit(3)], party(2, [7, 8, 9]))).toBe(true);
+  it('allows an extra room for children on a booking with one adult', () => {
+    const single = unit(2, { adults: 1, children: 1 });
+    expect(canHost([single], party(1, [7, 8]))).toBe(false);
+    expect(canHost([single, single], party(1, [7, 8]))).toBe(true);
+  });
+
+  it('requires at least one guest who fits each selected room', () => {
+    const adultsOnly = unit(2, { children: 0 });
+    expect(canHost([adultsOnly, adultsOnly, unit(3)], party(1, [7, 8]))).toBe(
+      false,
+    );
+    expect(canHost([adultsOnly, unit(1)], party(1, [7]))).toBe(true);
   });
 
   it('lets two rooms hold a party that fits neither alone', () => {
