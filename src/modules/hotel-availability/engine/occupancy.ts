@@ -24,10 +24,7 @@ export type Party = {
 
 export type HostUnit = { capacity: number; limits: OccupancyLimits };
 
-export const partyGuests = ({
-  adults,
-  children,
-}: Pick<Party, 'adults' | 'children'>) => adults + children;
+export const partyGuests = (party: Party) => party.adults + party.children;
 
 const BIG = 1_000_000;
 const cap = (limit: number | null) => (limit === null ? BIG : limit);
@@ -60,24 +57,25 @@ function maxFlow(capacity: number[][], source: number, sink: number): number {
   }
 }
 
-// Can these room units hold the whole party, with at least one guest in every room?
-// The age bands are separate:
+// Can these room units hold the whole party, with at least one adult in every room?
+// One adult per room is placed first; the rest is a max-flow over each room's limits. The age bands are separate:
 // ages 0-2 <= under3, ages 3-5 <= under6, ages 6-12 <= age6to12, all children <= children, adults <= adults, everyone <= capacity.
 export function canHost(units: HostUnit[], party: Party): boolean {
   const rooms = units.length;
-  if (rooms < 1 || party.adults < 1 || partyGuests(party) < rooms) return false;
+  if (rooms < 1 || party.adults < rooms) return false;
   if (units.some((unit) => unit.capacity < 1 || cap(unit.limits.adults) < 1))
     return false;
 
   const ages = party.childAges;
   const demand = [
-    party.adults,
+    party.adults - rooms,
     ages ? ages.filter((age) => age <= 2).length : 0,
     ages ? ages.filter((age) => age >= 3 && age <= 5).length : 0,
     ages ? ages.filter((age) => age >= 6).length : 0,
     ages ? 0 : party.children,
   ];
   const needed = demand.reduce((sum, count) => sum + count, 0);
+  if (needed === 0) return true;
 
   // Nodes: 0 source, 1 sink, 2..6 guest groups, then per room: total, adults, children, under6, under3, 6-12.
   const SOURCE = 0;
@@ -93,8 +91,8 @@ export function canHost(units: HostUnit[], party: Party): boolean {
       (_, k) => 7 + index * 6 + k,
     );
     const { limits } = unit;
-    graph[total][SINK] = 1;
-    graph[adults][total] = cap(limits.adults);
+    graph[total][SINK] = unit.capacity - 1;
+    graph[adults][total] = cap(limits.adults) - 1;
     graph[children][total] = cap(limits.children);
     graph[under6][children] = cap(limits.under6);
     graph[under3][children] = cap(limits.under3);
@@ -105,11 +103,5 @@ export function canHost(units: HostUnit[], party: Party): boolean {
     graph[5][sixToTwelve] = BIG;
     graph[6][children] = BIG;
   });
-  // Fill one place in each room first. The residual graph can then move guests
-  // between rooms while preserving at least one occupied place in each room.
-  if (maxFlow(graph, SOURCE, SINK) !== rooms) return false;
-  units.forEach((unit, index) => {
-    graph[7 + index * 6][SINK] = unit.capacity - 1;
-  });
-  return maxFlow(graph, SOURCE, SINK) === needed - rooms;
+  return maxFlow(graph, SOURCE, SINK) === needed;
 }

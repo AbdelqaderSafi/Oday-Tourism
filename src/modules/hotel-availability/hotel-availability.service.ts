@@ -85,7 +85,7 @@ function availableTerms(
       roomStayTerms(
         toRoomStock(room, roomNights),
         stay.nights,
-        stay.party,
+        stay.party.adults,
         stay.currency,
       ),
     )
@@ -103,6 +103,12 @@ function exactRooms(
     .sort((a, b) => compareIds(a.roomId, b.roomId));
   if (!isSelectionFeasible(rooms, terms, party)) throw stayUnavailable('rooms');
   return rooms;
+}
+
+function recommendedRooms(terms: RoomStayTerms[], party: Party): RoomPick[] {
+  const allocation = chooseAllocation(terms, party);
+  if (!allocation) throw stayUnavailable();
+  return allocation.rooms;
 }
 
 function selectedUpgrades(
@@ -219,24 +225,15 @@ export class HotelAvailabilityService {
       body.check_out,
     );
     const terms = availableTerms(hotel.rooms, roomNights, stay);
-    if (!terms.length && !body.rooms) throw stayUnavailable();
     const rooms = body.rooms
       ? exactRooms(body.rooms, terms, stay.party)
-      : (chooseAllocation(terms, stay.party)?.rooms ?? []);
-    const priced = rooms.length
-      ? priceStay(
-          rooms,
-          terms,
-          selectedUpgrades(body.addons ?? [], hotel.addons, stay.currency),
-          stay.nights.length,
-        )
-      : {
-          rooms: [],
-          addons: [],
-          roomTotal: null,
-          addonsTotal: null,
-          total: null,
-        };
+      : recommendedRooms(terms, stay.party);
+    const priced = priceStay(
+      rooms,
+      terms,
+      selectedUpgrades(body.addons ?? [], hotel.addons, stay.currency),
+      stay.nights.length,
+    );
 
     return {
       hotel_id: hotel.id,

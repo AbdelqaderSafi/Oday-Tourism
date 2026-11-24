@@ -18,7 +18,7 @@ export function nightOffers(
 ): NightOffer[] {
   return dates.map((date) => {
     const terms = rooms
-      .map((room) => roomStayTerms(room, [date], party, currency))
+      .map((room) => roomStayTerms(room, [date], party.adults, currency))
       .filter((roomTerms) => roomTerms.maxQuantity >= 1);
     const allocation = chooseAllocation(terms, party);
     return {

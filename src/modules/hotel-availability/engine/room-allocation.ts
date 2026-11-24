@@ -44,7 +44,7 @@ const unitsOf = (type: AllocationCandidate, quantity: number): HostUnit[] =>
   }));
 
 // Depth-first over types in room_id order, with q units of each. Ranking: cost (0 for the on-request pass),
-// then fewer rooms, then the stable room order. Every room needs at least one guest.
+// then fewer rooms, then the stable room order. Every room needs an adult, so a plan has at most `adults` rooms.
 function bestPlan(
   candidates: AllocationCandidate[],
   party: Party,
@@ -53,18 +53,7 @@ function bestPlan(
   const types = candidates
     .filter((candidate) => candidate.capacity > 0 && candidate.maxQuantity > 0)
     .sort((a, b) => compareIds(a.roomId, b.roomId));
-  if (party.children > 0) {
-    // Additional rooms can only help if every requested age has a compatible type.
-    const childLimits = types
-      .map(({ limits }) => limits)
-      .filter(({ children }) => children !== 0);
-    const hasUnsupportedAge = party.childAges?.some((age) => {
-      const band = age < 3 ? 'under3' : age < 6 ? 'under6' : 'age6to12';
-      return !childLimits.some((limits) => limits[band] !== 0);
-    });
-    if (!childLimits.length || hasUnsupportedAge) return null;
-  }
-  const guests = partyGuests(party);
+  const maxRooms = Math.min(party.adults, partyGuests(party));
   let best: Plan | null = null;
   const picks: RoomPick[] = [];
   const units: HostUnit[] = [];
@@ -82,7 +71,7 @@ function bestPlan(
     )
       return;
     if (index === types.length) {
-      if (count < 1 || room < guests) return;
+      if (count < 1 || room < partyGuests(party)) return;
       const plan = { rooms: [...picks], count, cost };
       if (isBetter(plan) && canHost(units, party)) best = plan;
       return;
@@ -91,7 +80,7 @@ function bestPlan(
     visit(index + 1, cost, count, room);
     for (
       let quantity = 1;
-      quantity <= type.maxQuantity && count + quantity <= guests;
+      quantity <= type.maxQuantity && count + quantity <= maxRooms;
       quantity++
     ) {
       picks.push({ roomId: type.roomId, quantity });

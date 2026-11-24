@@ -129,7 +129,7 @@ describe('nightOffers', () => {
     ] as const) {
       const rooms = [double, family, suiteNoEgp];
       const terms = rooms
-        .map((room) => roomStayTerms(room, [date], adults(guests), currency))
+        .map((room) => roomStayTerms(room, [date], guests, currency))
         .filter((t) => t.maxQuantity >= 1);
       const allocation = chooseAllocation(terms, adults(guests));
       const quoteTotal = allocation

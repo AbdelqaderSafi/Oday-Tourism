@@ -161,10 +161,10 @@ describe('chooseAllocation', () => {
     });
   });
 
-  it('recommends another room when children exceed the first room’s capacity', () => {
+  it('never gives a room to children alone', () => {
     expect(
       chooseAllocation([room('r', 3, 3, 1000)], family(1, [7, 8, 9])),
-    ).toEqual({ rooms: [{ roomId: 'r', quantity: 2 }], total: 2000 });
+    ).toBeNull();
     expect(
       chooseAllocation([room('r', 3, 3, 1000)], family(2, [7, 8, 9]))?.rooms,
     ).toEqual([{ roomId: 'r', quantity: 2 }]);
@@ -256,7 +256,7 @@ describe('isSelectionFeasible', () => {
     expect(isSelectionFeasible(both, types, family(4, [8]))).toBe(true);
   });
 
-  it('rejects unknown types, too many units, too little capacity and empty rooms', () => {
+  it('rejects unknown types, too many units, too little capacity and rooms without an adult', () => {
     expect(
       isSelectionFeasible(
         [{ roomId: 'r_other', quantity: 1 }],
@@ -278,8 +278,7 @@ describe('isSelectionFeasible', () => {
         adults(3),
       ),
     ).toBe(false);
-    expect(isSelectionFeasible(both, types, adults(1))).toBe(false);
-    expect(isSelectionFeasible(both, types, family(1, [5]))).toBe(true);
+    expect(isSelectionFeasible(both, types, family(1, [5]))).toBe(false);
   });
 
   it('rejects a selection that breaks an age limit', () => {
