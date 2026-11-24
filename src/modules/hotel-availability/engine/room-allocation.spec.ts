@@ -161,13 +161,25 @@ describe('chooseAllocation', () => {
     });
   });
 
-  it('never gives a room to children alone', () => {
+  it('adds a room for children who do not fit with a single adult', () => {
     expect(
-      chooseAllocation([room('r', 3, 3, 1000)], family(1, [7, 8, 9])),
-    ).toBeNull();
-    expect(
-      chooseAllocation([room('r', 3, 3, 1000)], family(2, [7, 8, 9]))?.rooms,
+      chooseAllocation([room('r', 3, 4, 1000)], family(1, [7, 8, 9]))?.rooms,
     ).toEqual([{ roomId: 'r', quantity: 2 }]);
+    expect(
+      chooseAllocation([room('r', 3, 5, 1000)], family(2, [7, 8, 9]))?.rooms,
+    ).toEqual([{ roomId: 'r', quantity: 2 }]);
+  });
+
+  it('books two Golf Beach singles for 1 adult and 2 children', () => {
+    const single = room('single', 2, 3, 10900, { adults: 1, children: 1 });
+    expect(chooseAllocation([single], family(1, [5]))).toEqual({
+      rooms: [{ roomId: 'single', quantity: 1 }],
+      total: 10900,
+    });
+    expect(chooseAllocation([single], family(1, [5, 7]))).toEqual({
+      rooms: [{ roomId: 'single', quantity: 2 }],
+      total: 21800,
+    });
   });
 
   it('returns null when no combination covers the party', () => {
@@ -256,7 +268,11 @@ describe('isSelectionFeasible', () => {
     expect(isSelectionFeasible(both, types, family(4, [8]))).toBe(true);
   });
 
-  it('rejects unknown types, too many units, too little capacity and rooms without an adult', () => {
+  it('accepts a room for a child alone when the booking has an adult', () => {
+    expect(isSelectionFeasible(both, types, family(1, [5]))).toBe(true);
+  });
+
+  it('rejects unknown types, too many units, too little capacity and empty rooms', () => {
     expect(
       isSelectionFeasible(
         [{ roomId: 'r_other', quantity: 1 }],
@@ -278,7 +294,7 @@ describe('isSelectionFeasible', () => {
         adults(3),
       ),
     ).toBe(false);
-    expect(isSelectionFeasible(both, types, family(1, [5]))).toBe(false);
+    expect(isSelectionFeasible(both, types, adults(1))).toBe(false);
   });
 
   it('rejects a selection that breaks an age limit', () => {

@@ -1,5 +1,5 @@
 import { Cents, parseAmount } from './money';
-import type { OccupancyLimits } from './occupancy';
+import type { OccupancyLimits, Party } from './occupancy';
 import type { RoomPick } from './room-allocation';
 
 export type Currency = 'USD' | 'EGP';
@@ -64,7 +64,7 @@ function sumOrNull(values: (Cents | null)[]): Cents | null {
 export function roomStayTerms(
   room: RoomTypeStock,
   nights: string[],
-  maxRooms: number,
+  party: Pick<Party, 'adults' | 'children'>,
   currency: Currency,
 ): RoomStayTerms {
   const nightlyRates = nights.map((date) => ({
@@ -76,12 +76,17 @@ export function roomStayTerms(
   const closed = nights.some(
     (date) => (room.nights.get(date)?.availableUnits ?? 1) <= 0,
   );
+  // A type shows only to parties with at least its adult capacity in adults (a double from 2 adults up).
+  const shown = party.adults >= (room.limits.adults ?? 1);
   return {
     roomId: room.roomId,
     capacity: room.capacity,
     limits: room.limits,
-    // A type without a verified capacity is never offered (spec 6.4); every room needs an adult, so maxRooms is the adult count.
-    maxQuantity: nights.length && room.capacity >= 1 && !closed ? maxRooms : 0,
+    // A type without a verified capacity is never offered (spec 6.4). Every room needs a guest, so at most one per guest.
+    maxQuantity:
+      nights.length && room.capacity >= 1 && !closed && shown
+        ? party.adults + party.children
+        : 0,
     unitStayTotal: sumOrNull(nightlyRates.map((night) => night.unitRate)),
     nightlyRates,
   };

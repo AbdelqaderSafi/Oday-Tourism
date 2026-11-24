@@ -44,7 +44,7 @@ const unitsOf = (type: AllocationCandidate, quantity: number): HostUnit[] =>
   }));
 
 // Depth-first over types in room_id order, with q units of each. Ranking: cost (0 for the on-request pass),
-// then fewer rooms, then the stable room order. Every room needs an adult, so a plan has at most `adults` rooms.
+// then fewer rooms, then the stable room order. Every room needs a guest, so a plan has at most one room per guest.
 function bestPlan(
   candidates: AllocationCandidate[],
   party: Party,
@@ -53,7 +53,7 @@ function bestPlan(
   const types = candidates
     .filter((candidate) => candidate.capacity > 0 && candidate.maxQuantity > 0)
     .sort((a, b) => compareIds(a.roomId, b.roomId));
-  const maxRooms = Math.min(party.adults, partyGuests(party));
+  const maxRooms = partyGuests(party);
   let best: Plan | null = null;
   const picks: RoomPick[] = [];
   const units: HostUnit[] = [];
