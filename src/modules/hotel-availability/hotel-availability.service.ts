@@ -85,7 +85,7 @@ function availableTerms(
       roomStayTerms(
         toRoomStock(room, roomNights),
         stay.nights,
-        stay.party.adults,
+        stay.party,
         stay.currency,
       ),
     )

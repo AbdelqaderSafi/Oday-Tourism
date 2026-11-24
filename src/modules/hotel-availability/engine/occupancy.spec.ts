@@ -29,7 +29,7 @@ const unlimited = (value: number | null) => value ?? Number.POSITIVE_INFINITY;
 
 // Independent oracle: try every assignment of every guest to a unit and check each unit directly.
 function bruteForce(units: HostUnit[], p: Party): boolean {
-  if (!units.length) return false;
+  if (!units.length || p.adults < 1) return false;
   const guests: ('adult' | number | 'unknown')[] = [
     ...Array.from({ length: p.adults }, () => 'adult' as const),
     ...(p.childAges ??
@@ -49,7 +49,7 @@ function bruteForce(units: HostUnit[], p: Party): boolean {
         (g) => typeof g === 'number' && g >= 6,
       ).length;
       return (
-        adults >= 1 &&
+        mine.length >= 1 &&
         mine.length <= u.capacity &&
         adults <= unlimited(u.limits.adults) &&
         kids.length <= unlimited(u.limits.children) &&
@@ -117,9 +117,34 @@ describe('canHost', () => {
     expect(canHost([unit(4)], party(1, [0, 3, 12]))).toBe(true);
   });
 
-  it('requires at least one adult in every room', () => {
-    expect(canHost([unit(3), unit(3)], party(1, [7, 8, 9]))).toBe(false);
+  it('lets children take an extra room when the booking has an adult', () => {
+    expect(canHost([unit(3), unit(3)], party(1, [7, 8, 9]))).toBe(true);
     expect(canHost([unit(3), unit(3)], party(2, [7, 8, 9]))).toBe(true);
+    expect(canHost([unit(3)], party(0, [7]))).toBe(false);
+  });
+
+  it('never leaves a room empty', () => {
+    expect(canHost([unit(3), unit(3), unit(3)], party(1, [7]))).toBe(false);
+    expect(canHost([unit(3), unit(3)], party(2, []))).toBe(true);
+    expect(canHost([unit(3), unit(3), unit(3)], party(2, []))).toBe(false);
+    // Enough guests for three rooms, but the two adults-only rooms share a single adult.
+    const adultsOnly = unit(3, { children: 0 });
+    expect(canHost([adultsOnly, adultsOnly, unit(3)], party(1, [7, 8]))).toBe(
+      false,
+    );
+    expect(canHost([adultsOnly, adultsOnly, unit(3)], party(2, [7]))).toBe(
+      true,
+    );
+  });
+
+  it('holds 1 adult and 2 children in two Golf Beach singles (1 adult + 1 child each)', () => {
+    const single = unit(2, { adults: 1, children: 1 });
+    expect(canHost([single], party(1, [5]))).toBe(true);
+    expect(canHost([single], party(1, [5, 7]))).toBe(false);
+    expect(canHost([single, single], party(1, [5, 7]))).toBe(true);
+    expect(canHost([single, single], party(2, []))).toBe(true);
+    expect(canHost([single, single, single], party(1, [5, 7]))).toBe(true);
+    expect(canHost([single, single], party(1, [5, 7, 9]))).toBe(false);
   });
 
   it('lets two rooms hold a party that fits neither alone', () => {
@@ -153,7 +178,7 @@ describe('canHost', () => {
         random() < 0.15
           ? null
           : Array.from({ length: pick(0, 3) }, () => pick(0, 12));
-      const p = party(pick(1, 3), ages, ages ? ages.length : pick(0, 3));
+      const p = party(pick(0, 3), ages, ages ? ages.length : pick(0, 3));
       expect({ units, p, result: canHost(units, p) }).toEqual({
         units,
         p,
