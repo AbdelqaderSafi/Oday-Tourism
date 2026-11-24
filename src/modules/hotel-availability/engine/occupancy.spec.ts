@@ -42,7 +42,9 @@ function bruteForce(units: HostUnit[], p: Party): boolean {
       const adults = mine.filter((g) => g === 'adult').length;
       const kids = mine.filter((g) => g !== 'adult');
       const under3 = kids.filter((g) => typeof g === 'number' && g <= 2).length;
-      const under6 = kids.filter((g) => typeof g === 'number' && g <= 5).length;
+      const under6 = kids.filter(
+        (g) => typeof g === 'number' && g >= 3 && g <= 5,
+      ).length;
       const sixToTwelve = kids.filter(
         (g) => typeof g === 'number' && g >= 6,
       ).length;
@@ -87,11 +89,25 @@ describe('canHost', () => {
     expect(canHost([example], party(2, [2, 2]))).toBe(false);
   });
 
-  it('counts a child under 3 toward both the under-3 and the under-6 limits', () => {
+  it('keeps the age bands separate: under-3 never counts toward the 3-5 (under-6) limit', () => {
     const room = unit(5, { under3: 1, under6: 1 });
     expect(canHost([room], party(1, [2]))).toBe(true);
-    expect(canHost([room], party(1, [2, 4]))).toBe(false);
-    expect(canHost([room], party(1, [4, 7]))).toBe(true);
+    expect(canHost([room], party(1, [2, 4]))).toBe(true);
+    expect(canHost([room], party(1, [4, 5]))).toBe(false);
+    expect(canHost([room], party(1, [2, 2]))).toBe(false);
+  });
+
+  it('accepts a 2-year-old and rejects a 3-year-old when only under-3 is allowed', () => {
+    const room = unit(4, {
+      adults: 3,
+      children: 1,
+      under3: 1,
+      under6: 0,
+      age6to12: 0,
+    });
+    expect(canHost([room], party(3, [2]))).toBe(true);
+    expect(canHost([room], party(3, [3]))).toBe(false);
+    expect(canHost([room], party(3, [7]))).toBe(false);
   });
 
   it('treats 0 as forbidding the category and null as no extra limit', () => {
